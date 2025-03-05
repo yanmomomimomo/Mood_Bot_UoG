@@ -82,3 +82,5 @@ fabric.properties
 # .DS_Store
 .DS_Store
 
+# 不知道什么玩意
+.idea/.name
