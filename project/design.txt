@@ -1,0 +1,1 @@
+the main.cpp could run as normal.
