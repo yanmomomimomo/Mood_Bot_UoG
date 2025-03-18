@@ -85,3 +85,6 @@ fabric.properties
 # 不知道什么玩意
 .idea/.name
 .idea/
+
+# CMake的build文件夹
+build/
