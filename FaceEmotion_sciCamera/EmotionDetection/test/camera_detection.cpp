@@ -1,10 +1,15 @@
 #include <opencv2/opencv.hpp>
 #include "libcam2opencv.h"
+#include <string>
+#include <libcamera2opencv/libcamera2opencv.h>
+#include "/home/mood/libcamera2opencv/libcam2opencv.h"
+
 
 // object-detection-tnn-sdk 头文件
 #include "object_detection.h"
 #include "file_utils.h"
 #include "image_utils.h"
+int frameCount = 0;
 
 using namespace dl;
 using namespace vision;
@@ -13,6 +18,7 @@ using namespace std;
 // 用于显示图像的全局变量
 cv::Mat currentFrame;
 bool hasNewFrame = false;
+
 
 // TNN模型相关参数
 const int num_thread = 1; // 线程数
@@ -33,8 +39,30 @@ ObjectDetection *detector = nullptr;
 int processEveryNFrames = 5;
 int frameCount = 0;
 
-// 根据README示例定义回调结构体
-        std::cout << "初始化程序..." << std::endl;
+// 回调结构体
+struct MyCallback : public Libcam2OpenCV::Callback {
+    void hasFrame(const cv::Mat &frame, const libcamera::ControlList &metadata) override {
+        if (!frame.empty()) {
+            std::lock_guard<std::mutex> lock(frameMutex);
+            frame.copyTo(currentFrame);
+            hasNewFrame = true;
+        }
+    }
+    std::mutex frameMutex;
+};
+
+        // 根据README示例创建相机和回调实例
+        Libcam2OpenCV camera;
+        MyCallback callback;
+
+        // 注册回调
+        std::cout << "注册回调..." << std::endl;
+        camera.registerCallback(&callback);
+
+        // 启动相机
+        std::cout << "启动相机..." << std::endl;
+        camera.start();
+         std::cout << "初始化程序..." << std::endl;
 
         // 检查模型文件是否存在
         if (!file_exists(det_model_file) || !file_exists(det_proto_file)) {
@@ -51,6 +79,7 @@ int frameCount = 0;
                                        model_param,
                                        num_thread,
                                        device);
+
 
         // 创建窗口
         cv::namedWindow("Camera", cv::WINDOW_NORMAL);
@@ -85,7 +114,8 @@ int frameCount = 0;
 
                     // 打印检测结果
                     std::cout << "帧 #" << frameCount << ", 检测到 "
-                              << resultInfo.objects.size() << " 个人脸" << std::endl;
+                              << resultInfo.info.size() << " 个人脸" << std::endl;
+
 
                     // 使用处理后的帧进行显示
                     processFrame = resizedFrame;
