@@ -1,108 +1,71 @@
-#include <iostream>
-#include <string>
-#include <vector>
-#include <opencv2/opencv.hpp>
-#include <QApplication>
-#include <QWidget>
-#include <QLabel>
-#include <QVBoxLayout>
-#include <QTimer>
+#include "libcam2opencv.h"
 
-// libcamera2opencv 头文件
-// object-detection-tnn-sdk 头文件
-#include "object_detection.h"
-#include "classification.h"
-#include "file_utils.h"
-#include "image_utils.h"
+// 用于显示图像的全局变量
+cv::Mat currentFrame;
+bool hasNewFrame = false;
 
-using namespace std;
-using namespace dl;
-using namespace vision;
-using namespace std;
-
-// 全局变量
-const int num_thread = 1;
-DeviceType device = CPU;  // 使用CPU运行，如果树莓派支持GPU可以改为GPU
-
-// 人脸检测模型
-const char *det_model_file = (char *) "../data/tnn/face/rfb-face-mask-320-320_sim.opt.tnnmodel";
-const char *det_proto_file = (char *) "../data/tnn/face/rfb-face-mask-320-320_sim.opt.tnnproto";
-ObjectDetectionParam model_param = FACE_MODEL;//模型参数
-
-  // 设置检测阈值
-  const float scoreThresh = 0.5;
-  const float iouThresh = 0.3;
-
-// 全局对象
-ObjectDetection *detector = nullptr;
-Libcam2OpenCV *camera = nullptr;
-
-// 使用libcamera2opencv的回调类
-struct DetectionCallback : Libcam2OpenCV::Callback {
-    virtual void hasFrame(const cv::Mat &frame, const libcamera::ControlList &metadata) override {
-        if (!frame.empty() && detector != nullptr) {
-            // 调整图像大小
-            cv::Mat resized_frame = image_resize(frame, 960);
-
-            // 进行目标检测
-            FrameInfo resultInfo;
-            detector->detect(resized_frame, &resultInfo, scoreThresh, iouThresh);
-
-            // 可视化结果
-            detector->visualizeResult(resized_frame, &resultInfo, 1);
-
-            // 显示图像
-            cv::imshow("Camera Detection", resized_frame);
-            cv::waitKey(1);  // 非阻塞式等待
+// 根据README示例定义回调结构体
+struct MyCallback : Libcam2OpenCV::Callback {
+    virtual void hasFrame(const cv::Mat &frame, const libcamera::ControlList &) {
+        if (!frame.empty()) {
+            // 复制帧以便在主线程中显示
+            frame.copyTo(currentFrame);
+            hasNewFrame = true;
+            
+            // 打印帧信息（仅在第一帧）
+            static bool first_frame = true;
+            if (first_frame) {
+                std::cout << "首帧信息: " << frame.cols << "x" << frame.rows
+                          << ", 类型=" << frame.type()
+                          << ", 通道数=" << frame.channels() << std::endl;
+                first_frame = false;
+            }
         }
+        cv::namedWindow("Camera", cv::WINDOW_NORMAL);
+
+        // 根据README示例创建相机和回调实例
+        Libcam2OpenCV camera;
+        MyCallback myCallback;
+
+        // 注册回调
+        std::cout << "注册回调..." << std::endl;
+        camera.registerCallback(&myCallback);
+
+        // 启动相机
+        std::cout << "启动相机..." << std::endl;
+        camera.start();
+
+        std::cout << "按下 'q' 退出" << std::endl;
+
+        // 主循环
+        int frameCount = 0;
+        while (true) {
+            // 如果有新帧，则显示
+            if (hasNewFrame) {
+                cv::imshow("Camera", currentFrame);
+                hasNewFrame = false;
+
+                // 每30帧打印一次中心像素值
+                if (frameCount++ % 30 == 0 && !currentFrame.empty()) {
+                    cv::Vec3b pixel = currentFrame.at<cv::Vec3b>(currentFrame.rows/2, currentFrame.cols/2);
+                    std::cout << "帧 #" << frameCount
+                              << ", 中心像素值: [" << (int)pixel[0] << ","
+                              << (int)pixel[1] << "," << (int)pixel[2] << "]"
+                              << std::endl;
+                }
+            }
+
+            // 检查退出
+            char key = cv::waitKey(10);
+            if (key == 'q' || key == 'Q') {
+                break;
+        // 停止相机
+        std::cout << "停止相机..." << std::endl;
+        camera.stop();
+
+        cv::destroyAllWindows();
+
+    } catch (const std::exception& e) {
+        std::cerr << "错误: " << e.what() << std::endl;
+        return -1;
     }
-};
-
-void cleanup() {
-    // 停止相机
-    if (camera != nullptr) {
-        camera->stop();
-        delete camera;
-        camera = nullptr;
-    }
-
-    // 释放检测器
-    if (detector != nullptr) {
-        delete detector;
-        detector = nullptr;
-    }
-
-    cv::destroyAllWindows();
-    printf("Cleaned up resources.\n");
-}
-
-int main() {
-    // 初始化目标检测器
-    // 创建相机回调
-    DetectionCallback *callback = new DetectionCallback();
-
-    // 初始化相机
-    camera = new Libcam2OpenCV();
-    camera->registerCallback(callback);
-
-
-      // 启动相机
-    printf("Starting camera...\n");
-    camera->start(settings);
-
-    printf("Press 'q' to quit.\n");
-
-    // 等待用户输入q退出
-    while (true) {
-        char key = cv::waitKey(100);
-        if (key == 'q' || key == 'Q') {
-            break;
-          }
-    }
-
-    // 清理资源
-    cleanup();
-    delete callback;
-
-    return 0;
-  }
