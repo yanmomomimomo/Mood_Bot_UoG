@@ -9,7 +9,7 @@ function App() {
 
   const socket = io('http://localhost:3000');
 
-  // Receive emotion updates from the backend (newly added)
+  // Receive mood updates from backend
   useEffect(() => {
     socket.on('moodUpdate', (mood) => {
       console.log('Received mood from backend:', mood);
@@ -21,21 +21,17 @@ function App() {
     };
   }, []);
 
-  // All other code remains unchanged (including handleMove, environment monitoring, etc.)
+  // Movement control handler
   const handleMove = (direction) => {
     console.log('Moving:', direction);
     socket.emit('move', direction);
-  };
-
-  const startGameMode = () => {
-    socket.emit('gameMode', true);
   };
 
   const startMonitoring = () => {
     socket.emit('startMonitoring', true);
   };
 
-  // Receive environment data (remain unchanged)
+  // Receive environment data from backend
   useEffect(() => {
     socket.on('environment', (data) => {
       setTemperature(data.temperature);
@@ -47,7 +43,7 @@ function App() {
     };
   }, []);
 
-  // Disconnect on component unmount (remain unchanged)
+  // Disconnect socket when component unmounts
   useEffect(() => {
     return () => {
       socket.disconnect();
@@ -59,7 +55,7 @@ function App() {
       <h1>MoodyBot: Your Intelligent Desktop Companion</h1>
       <p>MoodyBot helps you stay energized and balanced.</p>
 
-      {/* Emotion Recognition Section (the only modified part) */}
+      {/* Emotion recognition section */}
       <section className="card">
         <h2>😊 Emotional Recognition & LED Display</h2>
         <p>MoodyBot detects your emotions and reacts accordingly.</p>
@@ -79,7 +75,7 @@ function App() {
         </div>
       </section>
 
-      {/* Environment Monitoring Section (unchanged) */}
+      {/* Environment monitoring section */}
       <section className="card">
         <h2>🌡️ Smart Environment Control</h2>
         <p>Monitors temperature & CO₂ levels.</p>
@@ -90,7 +86,7 @@ function App() {
         <button onClick={() => socket.emit('checkEnvironment')}>Check Environment</button>
       </section>
 
-      {/* Movement Control Section (unchanged) */}
+      {/* Movement control section */}
       <section className="card">
         <h2>🚗 Movement Control</h2>
         <p>Control MoodyBot's movement.</p>
@@ -104,21 +100,13 @@ function App() {
         </div>
       </section>
 
-      {/* Game Mode Section (unchanged) */}
+      {/* Remote monitoring section */}
       <section className="card">
-        <h2>🎮 Fun & Playful Interaction</h2>
-        <p>Activate game mode and let MoodyBot play.</p>
-        <button onClick={startGameMode}>Start Game Mode</button>
-      </section>
-
-      {/* Remote Monitoring Section (unchanged) */}
-      <section className="card">
-        <h2>📹 Remote-Controlled Home Monitoring</h2>
-        <p>Use MoodyBot as a security assistant.</p>
+        <h2>📹 Remote Monitoring</h2>
         <button onClick={startMonitoring}>Start Monitoring</button>
       </section>
 
-      {/* Empty Space Section (unchanged) */}
+      {/* Empty space placeholder */}
       <div style={{ height: '500px' }}></div>
     </div>
   );
