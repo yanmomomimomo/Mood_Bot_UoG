@@ -1,71 +1,132 @@
+#include <opencv2/opencv.hpp>
 #include "libcam2opencv.h"
+
+// object-detection-tnn-sdk 头文件
+#include "object_detection.h"
+#include "file_utils.h"
+#include "image_utils.h"
+
+using namespace dl;
+using namespace vision;
+using namespace std;
 
 // 用于显示图像的全局变量
 cv::Mat currentFrame;
 bool hasNewFrame = false;
 
+// TNN模型相关参数
+const int num_thread = 1; // 线程数
+DeviceType device = CPU;  // 使用CPU推理
+// 人脸检测模型
+const char *det_model_file = (char *) "/home/mood/object-detection-tnn-sdk/data/tnn/face/rfb-face-mask-320-320_sim.opt.tnnmodel";
+const char *det_proto_file = (char *) "/home/mood/object-detection-tnn-sdk/data/tnn/face/rfb-face-mask-320-320_sim.opt.tnnproto";
+ObjectDetectionParam model_param = FACE_MODEL; // 使用人脸检测模型参数
+
+// 设置检测阈值
+const float scoreThresh = 0.5; // 置信度阈值
+const float iouThresh = 0.3;   // NMS阈值
+
+// 人脸检测对象
+ObjectDetection *detector = nullptr;
+
+// 控制检测频率
+int processEveryNFrames = 5;
+int frameCount = 0;
+
 // 根据README示例定义回调结构体
-struct MyCallback : Libcam2OpenCV::Callback {
-    virtual void hasFrame(const cv::Mat &frame, const libcamera::ControlList &) {
-        if (!frame.empty()) {
-            // 复制帧以便在主线程中显示
-            frame.copyTo(currentFrame);
-            hasNewFrame = true;
-            
-            // 打印帧信息（仅在第一帧）
-            static bool first_frame = true;
-            if (first_frame) {
-                std::cout << "首帧信息: " << frame.cols << "x" << frame.rows
-                          << ", 类型=" << frame.type()
-                          << ", 通道数=" << frame.channels() << std::endl;
-                first_frame = false;
-            }
+        std::cout << "初始化程序..." << std::endl;
+
+        // 检查模型文件是否存在
+        if (!file_exists(det_model_file) || !file_exists(det_proto_file)) {
+            std::cerr << "错误: 模型文件不存在!" << std::endl;
+            std::cerr << "模型文件: " << det_model_file << std::endl;
+            std::cerr << "配置文件: " << det_proto_file << std::endl;
+            return -1;
         }
+
+        // 初始化人脸检测器
+        std::cout << "初始化人脸检测器..." << std::endl;
+        detector = new ObjectDetection(det_model_file,
+                                       det_proto_file,
+                                       model_param,
+                                       num_thread,
+                                       device);
+
+        // 创建窗口
         cv::namedWindow("Camera", cv::WINDOW_NORMAL);
-
-        // 根据README示例创建相机和回调实例
-        Libcam2OpenCV camera;
-        MyCallback myCallback;
-
-        // 注册回调
-        std::cout << "注册回调..." << std::endl;
-        camera.registerCallback(&myCallback);
-
-        // 启动相机
-        std::cout << "启动相机..." << std::endl;
         camera.start();
 
-        std::cout << "按下 'q' 退出" << std::endl;
+        std::cout << "按下 'q' 退出, 's' 保存当前帧" << std::endl;
 
         // 主循环
-        int frameCount = 0;
         while (true) {
-            // 如果有新帧，则显示
+            // 如果有新帧，则显示和处理
             if (hasNewFrame) {
-                cv::imshow("Camera", currentFrame);
+                // 创建工作副本
+                cv::Mat processFrame = currentFrame.clone();
                 hasNewFrame = false;
 
-                // 每30帧打印一次中心像素值
-                if (frameCount++ % 30 == 0 && !currentFrame.empty()) {
-                    cv::Vec3b pixel = currentFrame.at<cv::Vec3b>(currentFrame.rows/2, currentFrame.cols/2);
-                    std::cout << "帧 #" << frameCount
-                              << ", 中心像素值: [" << (int)pixel[0] << ","
-                              << (int)pixel[1] << "," << (int)pixel[2] << "]"
-                              << std::endl;
+                // 帧计数增加
+                frameCount++;
+
+                // 检测结果结构
+                FrameInfo resultInfo;
+
+                // 每N帧执行一次人脸检测
+                if (frameCount % processEveryNFrames == 0) {
+                    // 调整图像大小以加快处理速度
+                    cv::Mat resizedFrame = image_resize(processFrame, 320);
+
+                    // 执行人脸检测
+                    detector->detect(resizedFrame, &resultInfo, scoreThresh, iouThresh);
+
+                    // 可视化检测结果
+                    detector->visualizeResult(resizedFrame, &resultInfo, 1);
+
+                    // 打印检测结果
+                    std::cout << "帧 #" << frameCount << ", 检测到 "
+                              << resultInfo.objects.size() << " 个人脸" << std::endl;
+
+                    // 使用处理后的帧进行显示
+                    processFrame = resizedFrame;
                 }
+
+                // 显示处理后的帧
+                cv::imshow("Camera", processFrame);
             }
 
-            // 检查退出
+            // 检查按键
             char key = cv::waitKey(10);
             if (key == 'q' || key == 'Q') {
-                break;
-        // 停止相机
+                break; // 退出
+            } else if (key == 's' || key == 'S') {
+                // 保存当前帧
+                if (!currentFrame.empty()) {
+                    std::string filename = "camera_frame_" + std::to_string(frameCount) + ".jpg";
+                    cv::imwrite(filename, currentFrame);
+                    std::cout << "已保存图像: " << filename << std::endl;
+                }
+            }
+        }
         std::cout << "停止相机..." << std::endl;
         camera.stop();
+
+        // 释放资源
+        if (detector) {
+            delete detector;
+            detector = nullptr;
+        }
 
         cv::destroyAllWindows();
 
     } catch (const std::exception& e) {
         std::cerr << "错误: " << e.what() << std::endl;
+
+        // 清理资源
+        if (detector) {
+            delete detector;
+            detector = nullptr;
+        }
+
         return -1;
     }
