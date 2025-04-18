@@ -3,6 +3,7 @@
 #include <string>
 #include <libcamera2opencv/libcamera2opencv.h>
 #include "/home/mood/libcamera2opencv/libcam2opencv.h"
+#include "classification.h"
 
 
 // object-detection-tnn-sdk 头文件
@@ -28,12 +29,19 @@ const char *det_model_file = (char *) "/home/mood/object-detection-tnn-sdk/data/
 const char *det_proto_file = (char *) "/home/mood/object-detection-tnn-sdk/data/tnn/face/rfb-face-mask-320-320_sim.opt.tnnproto";
 ObjectDetectionParam model_param = FACE_MODEL; // 使用人脸检测模型参数
 
+// 表情识别模型
+const char *emo_model_file = (char *) "/home/mood/object-detection-tnn-sdk/data/tnn/emotion/mobilenet_v2_112_112.tnnmodel";
+const char *emo_proto_file = (char *) "/home/mood/object-detection-tnn-sdk/data/tnn/emotion/mobilenet_v2_112_112.tnnproto";
+ClassificationParam emotion_param = EMOTION_MODEL; // 使用表情识别模型参数
+
 // 设置检测阈值
 const float scoreThresh = 0.5; // 置信度阈值
 const float iouThresh = 0.3;   // NMS阈值
 
 // 人脸检测对象
 ObjectDetection *detector = nullptr;
+// 表情识别对象
+Classification *emotionClassifier = nullptr
 
 // 控制检测频率
 int processEveryNFrames = 5;
@@ -56,6 +64,68 @@ void drawFaceCenters(cv::Mat &frame, const FrameInfo &resultInfo) {
     for (size_t i = 0; i < resultInfo.info.size(); i++) {
         const ObjectInfo &info = resultInfo.info[i];
 
+        // 如果有表情识别结果，显示表情
+        if (info.category.label >= 0 &&
+            info.category.label < static_cast<int>(emotion_param.class_names.size())) {
+
+            std::string emotionText = "Emotion: " + emotion_param.class_names[info.category.label] +
+                                     " (" + std::to_string(static_cast<int>(info.category.score * 100)) + "%)";
+
+            // 在坐标下方显示表情
+            int emoTextY = textY + 20; // 在坐标下方再加20像素
+
+            // 绘制背景矩形
+            cv::Size emoTextSize = cv::getTextSize(emotionText, cv::FONT_HERSHEY_SIMPLEX, 0.5, 1, nullptr);
+            cv::rectangle(frame,
+                         cv::Point(textX - 2, emoTextY - emoTextSize.height - 2),
+                         cv::Point(textX + emoTextSize.width + 2, emoTextY + 2),
+                         cv::Scalar(0, 0, 0), -1);
+
+            // 绘制表情文字，使用不同颜色
+            cv::putText(frame, emotionText, cv::Point(textX, emoTextY),
+                        cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 255, 255), 1);
+        }
+    }
+}
+
+// 对检测到的人脸进行表情识别
+void processEmotions(cv::Mat &frame, FrameInfo *frameInfo) {
+    if (frameInfo->info.empty() || !emotionClassifier) {
+        return; // 没有检测到人脸或表情分类器未初始化
+    }
+
+    for (size_t i = 0; i < frameInfo->info.size(); i++) {
+        ObjectInfo &faceInfo = frameInfo->info[i];
+
+        // 获取人脸区域
+        int x1 = std::max(0, static_cast<int>(faceInfo.x1));
+        int y1 = std::max(0, static_cast<int>(faceInfo.y1));
+        int x2 = std::min(frame.cols - 1, static_cast<int>(faceInfo.x2));
+        int y2 = std::min(frame.rows - 1, static_cast<int>(faceInfo.y2));
+
+        // 确保有效的人脸区域
+        if (x2 <= x1 || y2 <= y1) {
+            continue;
+        }
+
+        // 裁剪人脸图像
+        cv::Mat faceROI = frame(cv::Rect(x1, y1, x2 - x1, y2 - y1));
+        if (faceROI.empty()) {
+            continue;
+        }
+
+        // 创建一个临时的结果结构体
+        FrameInfo tempResult;
+
+        // 进行表情识别
+        emotionClassifier->detect(faceROI, &tempResult);
+
+        // 如果有分类结果，将其设置到人脸信息中
+        if (!tempResult.info.empty()) {
+            faceInfo.category = tempResult.info[0].category;
+        }
+
+
 
         // 计算中心点坐标（使用x1,y1,x2,y2）
         int centerX = static_cast<int>((info.x1 + info.x2) / 2);
@@ -64,9 +134,22 @@ void drawFaceCenters(cv::Mat &frame, const FrameInfo &resultInfo) {
         cv::circle(frame, cv::Point(centerX, centerY), 3, cv::Scalar(0, 255, 0), -1);
 
         // 显示中心点坐标
-        std::string centerText = "(" + std::to_string(centerX) + "," + std::to_string(centerY) + ")";
-        cv::putText(frame, centerText, cv::Point(centerX + 5, centerY - 5),
-                    cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 255, 0), 1);
+        // 显示中心点坐标在人脸框的下方
+        std::string centerText = "Center: (" + std::to_string(centerX) + "," + std::to_string(centerY) + ")";
+
+        // 在人脸框下方显示坐标
+        int textX = static_cast<int>(info.x1);
+        int textY = static_cast<int>(info.y2) + 20; // 放在框的下方20像素处
+
+        // 绘制背景矩形使文字更清晰
+        cv::Size textSize = cv::getTextSize(centerText, cv::FONT_HERSHEY_SIMPLEX, 0.5, 1, nullptr);
+        cv::rectangle(frame,
+                     cv::Point(textX - 2, textY - textSize.height - 2),
+                     cv::Point(textX + textSize.width + 2, textY + 2),
+                     cv::Scalar(0, 0, 0), -1);
+
+        // 绘制文字
+        cv::putText(frame, centerText, cv::Point(textX, textY),
 
         // 输出到控制台
         std::cout << "人脸 #" << i + 1 << " 中心坐标: (" << centerX << ", " << centerY << ")" << std::endl;
@@ -131,11 +214,20 @@ void drawFaceCenters(cv::Mat &frame, const FrameInfo &resultInfo) {
                     // 执行人脸检测
                     detector->detect(resizedFrame, &resultInfo, scoreThresh, iouThresh);
 
+                    // 如果检测到人脸，执行表情识别
+                    if (!lastResultInfo.info.empty()) {
+                        processEmotions(resizedFrame, &lastResultInfo);
+                    }
+
                     // 可视化检测结果
                     detector->visualizeResult(resizedFrame, &resultInfo, 1);
 
                     // 计算并显示人脸中心点
                     drawFaceCenters(resizedFrame, resultInfo);
+                    if (emotionClassifier) {
+                        delete emotionClassifier;
+                        emotionClassifier = nullptr;
+                    }
 
                     // 打印检测结果
                     std::cout << "帧 #" << frameCount << ", 检测到 "
