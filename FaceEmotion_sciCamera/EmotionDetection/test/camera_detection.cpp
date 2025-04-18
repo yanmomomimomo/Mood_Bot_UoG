@@ -51,6 +51,28 @@ struct MyCallback : public Libcam2OpenCV::Callback {
     std::mutex frameMutex;
 };
 
+// 计算并绘制人脸中心点
+void drawFaceCenters(cv::Mat &frame, const FrameInfo &resultInfo) {
+    for (size_t i = 0; i < resultInfo.info.size(); i++) {
+        const ObjectInfo &info = resultInfo.info[i];
+
+
+        // 计算中心点坐标（使用x1,y1,x2,y2）
+        int centerX = static_cast<int>((info.x1 + info.x2) / 2);
+
+        // 在图像上绘制中心点
+        cv::circle(frame, cv::Point(centerX, centerY), 3, cv::Scalar(0, 255, 0), -1);
+
+        // 显示中心点坐标
+        std::string centerText = "(" + std::to_string(centerX) + "," + std::to_string(centerY) + ")";
+        cv::putText(frame, centerText, cv::Point(centerX + 5, centerY - 5),
+                    cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 255, 0), 1);
+
+        // 输出到控制台
+        std::cout << "人脸 #" << i + 1 << " 中心坐标: (" << centerX << ", " << centerY << ")" << std::endl;
+    }
+}
+
         // 根据README示例创建相机和回调实例
         Libcam2OpenCV camera;
         MyCallback callback;
@@ -111,6 +133,9 @@ struct MyCallback : public Libcam2OpenCV::Callback {
 
                     // 可视化检测结果
                     detector->visualizeResult(resizedFrame, &resultInfo, 1);
+
+                    // 计算并显示人脸中心点
+                    drawFaceCenters(resizedFrame, resultInfo);
 
                     // 打印检测结果
                     std::cout << "帧 #" << frameCount << ", 检测到 "
