@@ -1,0 +1,3 @@
+/home/MootBot/MoodBot_Product/BSP/BSP_Servo/build/CMakeFiles/SER_EG.dir
+/home/MootBot/MoodBot_Product/BSP/BSP_Servo/build/CMakeFiles/edit_cache.dir
+/home/MootBot/MoodBot_Product/BSP/BSP_Servo/build/CMakeFiles/rebuild_cache.dir

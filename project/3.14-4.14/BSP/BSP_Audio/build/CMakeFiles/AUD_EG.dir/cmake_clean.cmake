@@ -1,0 +1,31 @@
+file(REMOVE_RECURSE
+  "AUD_EG"
+  "AUD_EG.pdb"
+  "CMakeFiles/AUD_EG.dir/Audio.cpp.o"
+  "CMakeFiles/AUD_EG.dir/Audio.cpp.o.d"
+  "CMakeFiles/AUD_EG.dir/Audio_main.cpp.o"
+  "CMakeFiles/AUD_EG.dir/Audio_main.cpp.o.d"
+  "CMakeFiles/AUD_EG.dir/home/MootBot/MoodBot_Product/BSP/BSP_5516/5516.cpp.o"
+  "CMakeFiles/AUD_EG.dir/home/MootBot/MoodBot_Product/BSP/BSP_5516/5516.cpp.o.d"
+  "CMakeFiles/AUD_EG.dir/home/MootBot/MoodBot_Product/BSP/BSP_KEYS/Key_register.cpp.o"
+  "CMakeFiles/AUD_EG.dir/home/MootBot/MoodBot_Product/BSP/BSP_KEYS/Key_register.cpp.o.d"
+  "CMakeFiles/AUD_EG.dir/home/MootBot/MoodBot_Product/BSP/BSP_KEYS/Keys.cpp.o"
+  "CMakeFiles/AUD_EG.dir/home/MootBot/MoodBot_Product/BSP/BSP_KEYS/Keys.cpp.o.d"
+  "CMakeFiles/AUD_EG.dir/home/MootBot/MoodBot_Product/BSP/BSP_LED/Led.cpp.o"
+  "CMakeFiles/AUD_EG.dir/home/MootBot/MoodBot_Product/BSP/BSP_LED/Led.cpp.o.d"
+  "CMakeFiles/AUD_EG.dir/home/MootBot/MoodBot_Product/BSP/BSP_LED/Led_register.cpp.o"
+  "CMakeFiles/AUD_EG.dir/home/MootBot/MoodBot_Product/BSP/BSP_LED/Led_register.cpp.o.d"
+  "CMakeFiles/AUD_EG.dir/home/MootBot/MoodBot_Product/BSP/BSP_QM2/QM2.cpp.o"
+  "CMakeFiles/AUD_EG.dir/home/MootBot/MoodBot_Product/BSP/BSP_QM2/QM2.cpp.o.d"
+  "CMakeFiles/AUD_EG.dir/home/MootBot/MoodBot_Product/SYS_Con/Getter_EventDriven.cpp.o"
+  "CMakeFiles/AUD_EG.dir/home/MootBot/MoodBot_Product/SYS_Con/Getter_EventDriven.cpp.o.d"
+  "CMakeFiles/AUD_EG.dir/home/MootBot/MoodBot_Product/SYS_Con/Setter_EventDriven.cpp.o"
+  "CMakeFiles/AUD_EG.dir/home/MootBot/MoodBot_Product/SYS_Con/Setter_EventDriven.cpp.o.d"
+  "CMakeFiles/AUD_EG.dir/home/MootBot/MoodBot_Product/SYS_Con/Sys_Functions.cpp.o"
+  "CMakeFiles/AUD_EG.dir/home/MootBot/MoodBot_Product/SYS_Con/Sys_Functions.cpp.o.d"
+)
+
+# Per-language clean rules from dependency scanning.
+foreach(lang CXX)
+  include(CMakeFiles/AUD_EG.dir/cmake_clean_${lang}.cmake OPTIONAL)
+endforeach()

@@ -1,0 +1,3 @@
+/home/MootBot/MoodBot_Product/BSP/BSP_Audio/build/CMakeFiles/AUD_EG.dir
+/home/MootBot/MoodBot_Product/BSP/BSP_Audio/build/CMakeFiles/edit_cache.dir
+/home/MootBot/MoodBot_Product/BSP/BSP_Audio/build/CMakeFiles/rebuild_cache.dir
