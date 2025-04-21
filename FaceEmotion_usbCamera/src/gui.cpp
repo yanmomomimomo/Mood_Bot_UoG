@@ -63,7 +63,7 @@ void Gui::showImage(QImage &img)
 
 void Gui::showEmotion(int &emotion_index)
 {
-    std::cout<<"emotion_index:"<<emotion_index<<std::endl;
+    //std::cout<<"emotion_index:"<<emotion_index<<std::endl;
     switch(emotion_index)
     {
       case 0:
@@ -86,8 +86,8 @@ void Gui::showEmotion(int &emotion_index)
       }
       case 6:
       {
-         display_msg->setPixmap(QPixmap(""));
-         display_emoji->setText("");
+         display_msg->setText("");
+         display_emoji->setPixmap(QPixmap());
          break;
       }
       case 7:

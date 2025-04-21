@@ -1,9 +1,13 @@
 ﻿#include "face_mesh.h"
 #include <string.h>
 #include <QtCore/QThread>
+#include <QtCore/QProcess>
 #include "gui.h"
+#include <iostream>
 
+bool START_EMOTION=true;
 QString emotion_model_path;
+
 int main(int argc, char* argv[])
 {
     QApplication app(argc,argv);

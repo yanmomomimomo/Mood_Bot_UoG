@@ -84,7 +84,7 @@ cc_binary(
     name = "faceemotionlive",
     srcs=["main.cpp"],
     linkopts = ["-L/usr/local/lib", "-lonnxruntime","-lonnxruntime_providers_shared"],
-    copts = ["-lonnxruntime","-lonnxruntime_providers_shared","-lpthread"],
+    copts = ["-lpthread"],
     deps = [
         ":gui",
         ":emotion",

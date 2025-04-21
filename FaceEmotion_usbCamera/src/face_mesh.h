@@ -54,6 +54,7 @@ private slots:
 signals:
     void frameDone(QImage&);
     void emotionDone(int&);
+    void servoTurn(int);
 private:
     void run();
     int valid_emotion_count=0;

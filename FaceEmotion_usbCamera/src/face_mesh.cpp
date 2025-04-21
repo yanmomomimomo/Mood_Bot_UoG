@@ -7,6 +7,7 @@ int img_width = 640;
 int img_height = 480;
       
 extern QString emotion_model_path;
+extern bool START_EMOTION;
 FaceMesh::FaceMesh()
 {
 
@@ -69,7 +70,8 @@ int FaceMesh::extractFace(cv::Mat& image,cv::Mat &firstface)
           return face_num;
       }
       auto& detections = detection_packet.Get<std::vector<mediapipe::Detection>>();
-      for(int i=0;i<detections.size();i++)
+      //face_num=detections.size();
+      for(int i=0;i<detections.size();i++) 
       {
         auto& detection=detections[i];
         const auto& rel_bbox = detection.location_data().relative_bounding_box();
@@ -90,11 +92,23 @@ int FaceMesh::extractFace(cv::Mat& image,cv::Mat &firstface)
         text=text+")";
         cv::putText(image,text,cv::Point(abs_xmin,abs_ymin),cv::FONT_HERSHEY_COMPLEX,1.0,cv::Scalar(255,0,0));
         cv::rectangle(image,cv::Point(abs_xmin,abs_ymin),cv::Point(abs_xmin+abs_width,abs_ymin+abs_height),cv::Scalar(0,0,255),2);
-        try{
-            image(cv::Rect(abs_xmin,abs_ymin,abs_width,abs_height)).copyTo(firstface);
-            face_num=1;
+        if(abs_xmin>400)
+        {
+           emit servoTurn(2000);
         }
-        catch(...){
+        else if(abs_xmin<100)
+        {
+           emit servoTurn(1000);
+        }
+        else{
+           emit servoTurn(1500);
+        }
+        try{
+           image(cv::Rect(abs_xmin,abs_ymin,abs_width,abs_height)).copyTo(firstface);
+           face_num=1;
+        }
+        catch(...)
+        {
         }
         break;
       }
@@ -125,6 +139,19 @@ void FaceMesh::run()
 
 void FaceMesh::updateFrame()
 {
+    if(!START_EMOTION)
+    {
+       cv::Mat camera_frame_raw=cv::Mat::zeros(img_height,img_width,CV_8UC3);
+       QImage qimg(camera_frame_raw.data, 
+            camera_frame_raw.cols, 
+            camera_frame_raw.rows, 
+            camera_frame_raw.step, 
+            QImage::Format_RGB888);
+       emit frameDone(qimg);
+       int e=6;
+       emit emotionDone(e);
+       return;
+    }
     cv::Mat camera_frame_raw;
     capture >> camera_frame_raw;
     if (camera_frame_raw.empty())
