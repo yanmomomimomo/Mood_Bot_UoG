@@ -2,24 +2,26 @@ import React, { useEffect, useState } from 'react';
 import './App.css';
 
 function App() {
+  // Component state
   const [currentMood, setCurrentMood] = useState('😊');
   const [temperature, setTemperature] = useState('N/A');
   const [co2Level, setCo2Level] = useState('N/A');
-  
-  // 使用 useState 存储 WebSocket 实例
-  const [ws, setWs] = useState(null);
+  const [ws, setWs] = useState(null); // WebSocket connection instance
 
+  // Establish WebSocket connection on component mount
   useEffect(() => {
-    // 连接到后端 WebSocket 服务器
     const socket = new WebSocket('ws://192.168.31.75:3001');
+    
+    // WebSocket event handlers
     socket.onopen = () => {
-      console.log('WebSocket 连接已建立');
+      console.log('WebSocket connection established');
     };
+    
     socket.onmessage = (event) => {
-      console.log('收到数据:', event.data);
-      // 假设后端发送的数据为 JSON 格式，例如 { temperature: 25, co2: 400 }
+      console.log('Received data:', event.data);
       try {
         const data = JSON.parse(event.data);
+        // Update state based on received data
         if (data.temperature !== undefined) {
           setTemperature(data.temperature);
         }
@@ -27,47 +29,59 @@ function App() {
           setCo2Level(data.co2);
         }
       } catch (error) {
-        console.error('解析数据出错:', error);
+        console.error('Error parsing data:', error);
       }
     };
+    
     socket.onclose = () => {
-      console.log('WebSocket 连接已关闭');
+      console.log('WebSocket connection closed');
     };
+    
     setWs(socket);
 
+    // Cleanup function to close connection on unmount
     return () => {
       socket.close();
     };
   }, []);
 
-  // 封装发送消息方法
+  /**
+   * Sends a message through the WebSocket connection
+   * @param {Object} message - The message to send
+   */
   const sendMessage = (message) => {
     if (ws && ws.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify(message));
     } else {
-      console.error('WebSocket 尚未连接');
+      console.error('WebSocket is not connected');
     }
   };
 
-  // 处理情绪变化
+  /**
+   * Handles mood change events
+   * @param {string} mood - The selected mood emoji
+   */
   const handleMoodChange = (mood) => {
     console.log('Mood changed to:', mood);
     setCurrentMood(mood);
     sendMessage({ type: 'mood', data: mood });
   };
 
-  // 处理移动指令
+  /**
+   * Sends movement commands
+   * @param {string} direction - Movement direction (forward/backward/left/right)
+   */
   const handleMove = (direction) => {
     console.log('Moving:', direction);
     sendMessage({ type: 'move', data: direction });
   };
 
-  // 启动游戏模式
+  // Activates game mode
   const startGameMode = () => {
     sendMessage({ type: 'gameMode', data: true });
   };
 
-  // 启动远程监控
+  // Starts remote monitoring
   const startMonitoring = () => {
     sendMessage({ type: 'startMonitoring', data: true });
   };
@@ -77,7 +91,7 @@ function App() {
       <h1>MoodyBot: Your Intelligent Desktop Companion</h1>
       <p>MoodyBot helps you stay energized and balanced.</p>
 
-      {/* 情绪识别区块 */}
+      {/* Mood Recognition Section */}
       <section className="card">
         <h2>😊 Emotional Recognition & LED Display</h2>
         <p>MoodyBot detects your emotions and reacts accordingly.</p>
@@ -89,7 +103,7 @@ function App() {
         </div>
       </section>
 
-      {/* 环境监测区块 */}
+      {/* Environment Monitoring Section */}
       <section className="card">
         <h2>🌡️ Smart Environment Control</h2>
         <p>Monitors temperature & CO₂ levels.</p>
@@ -97,10 +111,12 @@ function App() {
           <p>Temperature: {temperature}°C</p>
           <p>CO₂ Level: {co2Level} ppm</p>
         </div>
-        <button onClick={() => sendMessage({ type: 'checkEnvironment' })}>Check Environment</button>
+        <button onClick={() => sendMessage({ type: 'checkEnvironment' })}>
+          Check Environment
+        </button>
       </section>
 
-      {/* 移动控制区块 */}
+      {/* Movement Control Section */}
       <section className="card">
         <h2>🚗 Movement Control</h2>
         <p>Control MoodyBot's movement.</p>
@@ -114,21 +130,21 @@ function App() {
         </div>
       </section>
 
-      {/* 游戏模式区块 */}
+      {/* Game Mode Section */}
       <section className="card">
         <h2>🎮 Fun & Playful Interaction</h2>
         <p>Activate game mode and let MoodyBot play.</p>
         <button onClick={startGameMode}>Start Game Mode</button>
       </section>
 
-      {/* 远程监控区块 */}
+      {/* Remote Monitoring Section */}
       <section className="card">
         <h2>📹 Remote-Controlled Home Monitoring</h2>
         <p>Use MoodyBot as a security assistant.</p>
         <button onClick={startMonitoring}>Start Monitoring</button>
       </section>
 
-      {/* 添加一个大空白区域，确保页面有足够高度 */}
+      {/* Spacer to ensure sufficient page height */}
       <div style={{ height: '500px' }}></div>
     </div>
   );
