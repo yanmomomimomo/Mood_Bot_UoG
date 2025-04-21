@@ -1,0 +1,39 @@
+/* 让整个页面支持滚动 */
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    min-height: 100vh;
+    overflow-y: auto; /* 允许垂直滚动 */
+    font-family: Arial, sans-serif;
+    background-color: #f8f9fa; /* 轻微背景色 */
+    scroll-behavior: smooth; /* 让滚动更顺滑 */
+  }
+  
+  /* 让 root 充满整个视口 */
+  #root {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh; /* 让根元素至少填满整个屏幕 */
+  }
+  
+  /* 让容器内容适配页面 */
+  .container {
+    max-width: 800px;
+    padding: 20px;
+    text-align: center;
+  }
+  
+  /* 让卡片有更大的 margin，确保页面有足够内容滚动 */
+  .card {
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    margin: 50px auto; /* 增加外边距 */
+    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+    width: 80%;
+    max-width: 600px;
+    text-align: center;
+  }
+  
