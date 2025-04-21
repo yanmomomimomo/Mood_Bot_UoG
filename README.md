@@ -46,18 +46,18 @@ With the increasing popularity of smart home devices and emotionally interactive
 
 ## Team Members
 
-- Cui Yuxiang - 2864612C
+-  Yuxiang Cui - 2864612C
 [Jyc66ui](https://github.com/Jyc66ui)
-- Li Linzheng - 2021000001
+-  Linzheng Li - 2021000001
   [[MoonupLee](https://github.com/MoonupLee)]
   
-- Li Sicheng - 2021000001
+-  Sicheng Li - 2021000001
   [yanmomomimomo](https://github.com/yanmomomimomo)
   
-- Yuan Quan - 2021000001
+-  Quan Yuan - 2021000001
   [yquan0000](https://github.com/yquan0000)
   
-- Xu Zihan - 2764591X
+-  Zihan Xu - 2764591X
 [Mccona](https://github.com/Mccona)
 
 ## Hardware List
