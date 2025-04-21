@@ -615,6 +615,20 @@ Button:
 •	Data Passed: A boolean true, indicating the activation of remote monitoring.
 •	Backend Handling: The backend listens for the 'startMonitoring' event and activates the remote monitoring functionality.
 
+Installation Instructions:
+Download the project files
+Extract the node_modules folder (if included)
+Open a terminal/command prompt
+Navigate to the project directory:
+bash
+cd /path/to/project
+Install dependencies:
+bash
+npm install
+Start the development server:
+bash
+npm run dev
+
 
 This technology stack combination balances efficient development, excellent user experience, and maintainability, making it ideal for IoT control panel applications.  
 
