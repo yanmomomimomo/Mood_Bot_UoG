@@ -238,7 +238,130 @@ Draw a red pixel at (50, 80):
 
 - **Pin Check:** Confirm GPIO numbers in `LCD_Config.cpp` match hardware connections  
 - **SPI Configuration:** Ensure master SPI clock speed is within screen specifications (ST7789 usually supports 80MHz)  
-- **Orientation Calibration:** If displayed content is rotated incorrectly, adjust `Scan_dir` parameter or initialization commands  
+- **Orientation Calibration:** If displayed content is rotated incorrectly, adjust `Scan_dir` parameter or initialization commands
+
+### OLED Display Functions  
+#### Function Summary  
+
+| Function            | Implementation Method                                     | Display Example                     |  
+|---------------------|-----------------------------------------------------------|-----------------------------------|  
+| Basic Display Init   | Send initialization command sequence (0xAE Off → config → 0xAF On) | Blank screen (after initialization) |  
+| Border & Fixed Text  | Pre-stored bitmap data (`oled_frame`) + character rendering | Border + "Chr" text + "C" icon    |  
+| Date Display        | Retrieve system time in real-time + render with Font12    | "25MAY2023 Wed" (dynamic update)  |  
+| Timer Display       | Number formatting (5 digits separated by spaces) + Font16 rendering | "1 2 3 4 5"                      |  
+| Warning Interface   | Display pre-stored full-screen bitmap (`warningPattern`)   | Fullscreen warning icon            |  
+| Clear Screen / Shutdown | Clear display buffer or send 0xAE command               | Black screen                      |  
+#### Simplified Code Architecture  
+##### 1. OLED_class.hpp  
+
+```cpp  
+class OLED_class {  
+public:  
+    // User Interface  
+    bool Border_Show();       // Display border and fixed text  
+    bool TM_upgrade(int TM);  // Update timer display (input: integer)  
+    bool Date_upgrade();      // Update date display  
+    void OLED_Shootdown();    // Turn off screen  
+private:  
+    int i2c_fd_;             // I2C file descriptor  
+};  
+```
+##### 2. OLED.cpp  
+| Function       | Purpose                                    | Input/Output                     | Key Dependency           |
+|----------------|--------------------------------------------|---------------------------------|--------------------------|
+| OLED_init()    | Initialize screen (send command sequence) | None                            | I2C_writeCommand()       |
+| OLED_setPixel()| Set single pixel state in display buffer   | (x, y, on)                      | displayBuffer array      |
+| DrawChar()     | Render character to display buffer          | (x, y, char, font pointer)      | Font library in fonts.h  |
+| TM_upgrade()   | Format and display 5-digit timer value      | Input: integer (e.g., 12345)    | Font16                   |
+| Date_upgrade() | Display current date (auto fetch system time) | None                         | GetDate() + Font12       |
+##### 3. OLED_Config.cpp
+```cpp  
+// Hardware configuration (user editable)
+#define OLED_WIDTH   128     // Screen width (pixels)
+#define OLED_HEIGHT  64      // Screen height (pixels)
+#define I2C1_DEV    "/dev/i2c-1"  // I2C device path
+#define I2C1_ADDRESS 0x3C    // OLED I2C address
+
+```
+##### 4. Hardware Pin Mapping Table
+| OLED Pin | Master Connection           | Configuration Location                  | Notes                              |
+|----------|----------------------------|---------------------------------------|-----------------------------------|
+| SDA      | I2C Data Line (e.g., GPIO2)| System level I2C config (not direct code) | Enable via device tree or /boot/config.txt |
+| SCL      | I2C Clock Line (e.g., GPIO3)| Same as above                         | Requires 4.7KΩ pull-up resistor    |
+| VCC      | 3.3V                       | -                                     | Insufficient power causes display issues |
+| GND      | Ground                     | -                                     |                                   |
+
+**Key Configuration Points:**
+
+- I2C device path is `devName_` in OLED.cpp (default: "/dev/i2c-1")  
+- I2C address set by `ioctl(i2c_fd, I2C_SLAVE, I2C1_ADDRESS)` (usually 0x3C or 0x3D)  
+##### 5. Core Code Logic Flow
+###### 1. Initialization Stage
+
+- OLED_class constructor is called  
+  - 1.1 Open I2C device (`/dev/i2c-1`)  
+    - Failure: output error and return  
+    - Success: set I2C slave address (0x3C)  
+  - 1.2 Call `OLED_init()`  
+    - Send initialization command sequence (0xAE → 0xD5 → ... → 0xAF)  
+    - Clear display buffer (`displayBuffer` zeroed)  
+
+###### 2. Default Interface Display
+
+- Constructor continues  
+  - 2.1 Call `Border_Show()`  
+    - Clear display buffer  
+    - Draw pre-stored border bitmap (`oled_frame`)  
+    - Render fixed characters ("Chr" and "C")  
+  - 2.2 Call `Date_upgrade()`  
+    - Fetch system time (`GetDate()`)  
+    - Render date string (e.g., "25MAY2023 Wed") with Font12  
+  - 2.3 Call `TM_upgrade(12345)`  
+    - Format number as "1 2 3 4 5"  
+    - Render with Font16 at specified position  
+
+###### 3. Runtime Interactions
+
+- User-invoked functions  
+  - 3.1 Update timer (`TM_upgrade`)  
+    - Clear old number region (`clearRegion`)  
+    - Render new number and refresh display  
+  - 3.2 Show warning (`Warning_Show`)  
+    - Clear display buffer  
+    - Display stored warning bitmap fullscreen  
+  - 3.3 Shutdown (`OLED_Shootdown`)  
+    - Send command 0xAE to turn off display  
+
+###### 4. Display Refresh Process
+
+- Any display update calls `OLED_updateDisplay()`  
+  - 4.1 Set column address (0x21 + start/end columns)  
+  - 4.2 Set page address (0x22 + start/end pages)  
+  - 4.3 Write entire display buffer (`I2C_writeData`)  
+
+###### Key Points
+
+- All graphic operations modify `displayBuffer` in memory first  
+- Final flush to hardware via single call to `OLED_updateDisplay()`  
+- Hardware relies on success of I2C connection and initialization commands  
+- Display content limited by monochrome OLED features (1 = on, 0 = off)  
+- Time sensitive: `GetDate()` depends on system RTC; `TM_upgrade()` requires fast int-to-string conversion
+##### 6. Porting and Debugging Suggestions  
+###### First Use Checks  
+
+- Confirm I2C enabled (`i2cdetect -y 1` to scan device address)  
+- Measure VCC voltage (3.3V ±5%)  
+
+###### Common Issues  
+
+- No display: check return of `I2C_writeCommand()`, confirm I2C communication success  
+- Garbled screen: confirm full execution of `OLED_init()`, especially command 0xA6 (normal display mode)  
+
+###### Performance Optimization  
+
+- Reduce frequency of `OLED_updateDisplay()` calls (e.g., use partial refresh)
+
+ 
 ## Code Structure
 ## How it works
 
