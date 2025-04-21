@@ -48,7 +48,8 @@ With the increasing popularity of smart home devices and emotionally interactive
 
 -  Yuxiang Cui - 2864612C
 [Jyc66ui](https://github.com/Jyc66ui)
--  Linzheng Li - 2021000001
+
+-  Linzheng Li - 2930588L
   [[MoonupLee](https://github.com/MoonupLee)]
   
 -  Sicheng Li - 3049797L
