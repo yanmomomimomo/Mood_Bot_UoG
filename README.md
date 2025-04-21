@@ -1,4 +1,7 @@
 # MoodBot
+# Social Media
+
+https://www.tiktok.com/@moodbot_uog?_t=ZN-8vjAwkBpf6c&_r=1
 # Product Introduction: Mood Bot
 
 Mood Bot is a smart desktop robot designed for personal and home use. It consists of two motors, one servo, a screen, and an HD camera. It is also equipped with environmental sensors to monitor air quality and temperature. The device features an intelligent facial expression recognition system and a web-based interface for real-time interaction and control.
