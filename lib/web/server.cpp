@@ -1,66 +1,79 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <iostream>
+#include <cstring>
 #include <unistd.h>
 #include <arpa/inet.h>
+#include <system_error>
 
-#define PORT 3001
-#define BUFFER_SIZE 1024
+constexpr int PORT = 3001;
+constexpr int BUFFER_SIZE = 1024;
+constexpr int MAX_CONNECTIONS = 5;
 
 void handle_client(int client_socket) {
     char buffer[BUFFER_SIZE];
-    int bytes_received;
+    ssize_t bytes_received;
 
-    while ((bytes_received = recv(client_socket, buffer, BUFFER_SIZE, 0)) > 0) {
-        buffer[bytes_received] = '\0'; // 将接收到的数据变成字符串
-        printf("接收到的按钮: %s\n", buffer); // 输出按钮名称
+    while ((bytes_received = recv(client_socket, buffer, BUFFER_SIZE, 0)) {
+        if (bytes_received < 0) {
+            std::cerr << "Error receiving data" << std::endl;
+            break;
+        }
+
+        buffer[bytes_received] = '\0'; // Null-terminate the received data
+        std::cout << "Received button press: " << buffer << std::endl;
     }
 
     close(client_socket);
-    printf("客户端已断开连接。\n");
+    std::cout << "Client disconnected." << std::endl;
 }
 
 int main() {
     int server_socket, client_socket;
     struct sockaddr_in server_addr, client_addr;
-    socklen_t addr_size;
+    socklen_t addr_size = sizeof(client_addr);
 
-    // 创建套接字
+    // Create socket
     server_socket = socket(AF_INET, SOCK_STREAM, 0);
     if (server_socket < 0) {
-        perror("套接字创建失败");
-        exit(1);
+        throw std::system_error(errno, std::system_category(), "Socket creation failed");
     }
 
-    // 配置服务器地址和端口
+    // Configure server address
     server_addr.sin_family = AF_INET;
     server_addr.sin_addr.s_addr = INADDR_ANY;
     server_addr.sin_port = htons(PORT);
 
-    // 绑定套接字
-    if (bind(server_socket, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
-        perror("绑定失败");
-        exit(1);
+    // Bind the socket
+    if (bind(server_socket, reinterpret_cast<sockaddr*>(&server_addr), sizeof(server_addr)) {
+        close(server_socket);
+        throw std::system_error(errno, std::system_category(), "Bind failed");
     }
 
-    // 开始监听
-    if (listen(server_socket, 5) < 0) {
-        perror("监听失败");
-        exit(1);
+    // Start listening
+    if (listen(server_socket, MAX_CONNECTIONS)) {
+        close(server_socket);
+        throw std::system_error(errno, std::system_category(), "Listen failed");
     }
 
-    printf("服务器正在监听端口 %d...\n", PORT);
+    std::cout << "Server listening on port " << PORT << "..." << std::endl;
 
-    while (1) {
-        addr_size = sizeof(client_addr);
-        client_socket = accept(server_socket, (struct sockaddr *)&client_addr, &addr_size);
-        if (client_socket < 0) {
-            perror("客户端连接失败");
-            continue;
+    try {
+        while (true) {
+            // Accept new connection
+            client_socket = accept(server_socket, reinterpret_cast<sockaddr*>(&client_addr), &addr_size);
+            if (client_socket < 0) {
+                std::cerr << "Client connection failed" << std::endl;
+                continue;
+            }
+
+            std::cout << "Client connected from " 
+                      << inet_ntoa(client_addr.sin_addr) << ":"
+                      << ntohs(client_addr.sin_port) << std::endl;
+            
+            handle_client(client_socket);
         }
-
-        printf("客户端已连接。\n");
-        handle_client(client_socket);
+    } catch (...) {
+        close(server_socket);
+        throw;
     }
 
     close(server_socket);
