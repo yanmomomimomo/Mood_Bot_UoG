@@ -82,19 +82,21 @@ OS: Debain Bookworm 64-bit
 
 Sensors: 
 
-- A
-- B
-- C
+- Smoke Sensor (QM2)
+- Photosensitive Sensor (5516)
+- Temperature and Humidity Sensor (DHT11)
+- Human Radar Sensor Module (RD-03)
+- 
 
 Hardware:
 - Raspberry Camera Module 3 
 - Logitech C270 USB Webcam
-- A
-- B
-- C
-- D
-- E
-- F
+- Push buttons
+- OLED Display (I2C)
+- LCD Display (SPI)
+- USB Speaker (SDL2)
+- Servo Motor and DC Motor Driver Board (L298N)
+- 
 
 ## Configuration Description
 
