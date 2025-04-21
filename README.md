@@ -54,7 +54,7 @@ With the increasing popularity of smart home devices and emotionally interactive
 -  Sicheng Li - 2021000001
   [yanmomomimomo](https://github.com/yanmomomimomo)
   
--  Quan Yuan - 2021000001
+-  Quan Yuan - 3046818Y
   [yquan0000](https://github.com/yquan0000)
   
 -  Zihan Xu - 2764591X
