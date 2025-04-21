@@ -1,60 +1,91 @@
 #include <libwebsockets.h>
-#include <string.h>
-#include <stdio.h>
-#include <signal.h>
+#include <string>
+#include <iostream>
+#include <csignal>
 
-static int interrupted = 0;
+// Global flag for graceful shutdown
+static volatile int interrupted = 0;
 
-static int callback_websockets(struct lws *wsi, enum lws_callback_reasons reason,
-                               void *user, void *in, size_t len) {
+/**
+ * WebSocket callback function handling various events
+ * 
+ * @param wsi WebSocket instance
+ * @param reason Callback reason (event type)
+ * @param user User data
+ * @param in Received data (if applicable)
+ * @param len Length of received data
+ * @return 0 on success
+ */
+static int websocket_callback(struct lws *wsi, 
+                             enum lws_callback_reasons reason,
+                             void *user, 
+                             void *in, 
+                             size_t len) 
+{
     switch (reason) {
         case LWS_CALLBACK_RECEIVE:
-            // 打印收到的消息
-            printf("收到消息: %.*s\n", (int)len, (char *)in);
+            // Print received message
+            std::cout << "Received message: " 
+                      << std::string(static_cast<char*>(in), len) 
+                      << std::endl;
             break;
+            
         default:
             break;
     }
     return 0;
 }
 
+// Supported WebSocket protocols
 static struct lws_protocols protocols[] = {
     {
-        "example-protocol", // 协议名称，与客户端无需强制匹配
-        callback_websockets,
-        0,
-        1024,
+        "example-protocol",  // Protocol name (doesn't need client match)
+        websocket_callback, // Callback function
+        0,                  // User data size
+        1024,              // RX buffer size
     },
-    { NULL, NULL, 0, 0 } // 结束标记
+    { nullptr, nullptr, 0, 0 } // Terminator
 };
 
-static void sigint_handler(int sig) {
+/**
+ * Signal handler for graceful shutdown
+ * 
+ * @param sig Signal number
+ */
+static void sigint_handler(int sig) 
+{
     interrupted = 1;
 }
 
-int main(void) {
+int main() 
+{
+    // Initialize context creation info
     struct lws_context_creation_info info;
-    memset(&info, 0, sizeof info);
-    info.port = 3001;  // 与前端连接的端口保持一致
+    memset(&info, 0, sizeof(info));
+    info.port = 3001;        // Port to listen on (matches frontend)
     info.protocols = protocols;
     
-    // 捕获 Ctrl+C 信号以便退出
-    signal(SIGINT, sigint_handler);
+    // Register signal handler for Ctrl+C
+    std::signal(SIGINT, sigint_handler);
 
-    struct lws_context *context = lws_create_context(&info);
+    // Create WebSocket context
+    struct lws_context* context = lws_create_context(&info);
     if (!context) {
-        fprintf(stderr, "libwebsockets 初始化失败\n");
-        return -1;
+        std::cerr << "Failed to initialize libwebsockets" << std::endl;
+        return EXIT_FAILURE;
     }
 
-    printf("WebSocket 服务器已启动，监听端口 %d...\n", info.port);
+    std::cout << "WebSocket server started, listening on port " 
+              << info.port << "..." << std::endl;
     
-    // 进入事件循环
+    // Main event loop
     while (!interrupted) {
-        lws_service(context, 50);
+        lws_service(context, 50);  // 50ms timeout
     }
 
+    // Cleanup
     lws_context_destroy(context);
-    printf("服务器已关闭\n");
-    return 0;
+    std::cout << "Server shutdown complete" << std::endl;
+    
+    return EXIT_SUCCESS;
 }
