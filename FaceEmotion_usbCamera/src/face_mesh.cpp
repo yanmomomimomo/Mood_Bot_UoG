@@ -69,8 +69,7 @@ int FaceMesh::extractFace(cv::Mat& image,cv::Mat &firstface)
           return face_num;
       }
       auto& detections = detection_packet.Get<std::vector<mediapipe::Detection>>();
-      face_num=detections.size();
-      for(int i=0;i<detections.size();i++) 
+      for(int i=0;i<detections.size();i++)
       {
         auto& detection=detections[i];
         const auto& rel_bbox = detection.location_data().relative_bounding_box();
@@ -91,7 +90,12 @@ int FaceMesh::extractFace(cv::Mat& image,cv::Mat &firstface)
         text=text+")";
         cv::putText(image,text,cv::Point(abs_xmin,abs_ymin),cv::FONT_HERSHEY_COMPLEX,1.0,cv::Scalar(255,0,0));
         cv::rectangle(image,cv::Point(abs_xmin,abs_ymin),cv::Point(abs_xmin+abs_width,abs_ymin+abs_height),cv::Scalar(0,0,255),2);
-        image(cv::Rect(abs_xmin,abs_ymin,abs_width,abs_height)).copyTo(firstface);
+        try{
+            image(cv::Rect(abs_xmin,abs_ymin,abs_width,abs_height)).copyTo(firstface);
+            face_num=1;
+        }
+        catch(...){
+        }
         break;
       }
     }
