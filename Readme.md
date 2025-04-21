@@ -6,5 +6,5 @@ FaceEmotion_sciCamera  is the next version, trying to use more open-sourced libr
 
 ![qtviewer_bug](C:\Users\mccre\Documents\GitHub\Mood_Bot_UoG\assets\qtviewer_bug.png)
 
-It would display strips when running the example, but the camera itself is functional and display normally with FFmpeg. A conjecture is that QT Viewer is not compatible with that camera.
+
 
