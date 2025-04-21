@@ -16,11 +16,9 @@ Gui::Gui()
     control_layout=new QVBoxLayout;
     display_center->setLayout(control_layout);
     display_center->setFixedWidth(img_width);
-    //display_center->setMaximumWidth(640);
     display_face=new QLabel;
     display_face->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Expanding);
     display_face->setFixedHeight(img_height);
-    //display_face->setMaximumHeight(720);
     display_face->setStyleSheet("background:rgb(200,200,200);");
     display_emoji=new QLabel();
     display_emoji->setFont(font20);

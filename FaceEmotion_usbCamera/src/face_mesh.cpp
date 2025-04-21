@@ -1,6 +1,7 @@
 ﻿#include "face_mesh.h"
 #include <iostream>
 #include <thread>
+#include <string>
 using namespace std;
 int img_width = 640;  
 int img_height = 480;
@@ -58,39 +59,41 @@ int FaceMesh::extractFace(cv::Mat& image,cv::Mat &firstface)
     mediapipe::Packet detection_packet;
     int face_num=0;
     int bad_wait=0;
-    while((pPollerLandmarks_->QueueSize()==0) && (bad_wait<30))
+    if(pPollerLandmarks_->QueueSize()>1)
     {
-        std::this_thread::sleep_for(std::chrono::milliseconds(2));
-        bad_wait++;
-    }
-    if(!pPollerLandmarks_->Next(&detection_packet))
-    {
-        return face_num;
-    }
-    if (detection_packet.IsEmpty()) {
-        return face_num;
-    }
-    auto& detections = detection_packet.Get<std::vector<mediapipe::Detection>>();
-    face_num=detections.size();
-    for(int i=0;i<detections.size();i++) 
-    {
-      auto& detection=detections[i];
-      const auto& rel_bbox = detection.location_data().relative_bounding_box();
-      float xmin = rel_bbox.xmin();
-      float ymin = rel_bbox.ymin();
-      float width = rel_bbox.width();
-      float height = rel_bbox.height();
-      int img_width = 640;  
-      int img_height = 480;
-      int abs_xmin = static_cast<int>(xmin * img_width)-10;
-      if(abs_xmin<0)abs_xmin=0;
-      int abs_ymin = static_cast<int>(ymin * img_height)-10;
-      if(abs_ymin<0)abs_ymin=0;
-      int abs_width = static_cast<int>(width * img_width)+20;
-      int abs_height = static_cast<int>(height * img_height)+20;
-      cv::rectangle(image,cv::Point(abs_xmin,abs_ymin),cv::Point(abs_xmin+abs_width,abs_ymin+abs_height),cv::Scalar(0,0,255),2);
-      image(cv::Rect(abs_xmin,abs_ymin,abs_width,abs_height)).copyTo(firstface);
-      break;
+      if(!pPollerLandmarks_->Next(&detection_packet))
+      {
+          return face_num;
+      }
+      if (detection_packet.IsEmpty()) {
+          return face_num;
+      }
+      auto& detections = detection_packet.Get<std::vector<mediapipe::Detection>>();
+      face_num=detections.size();
+      for(int i=0;i<detections.size();i++) 
+      {
+        auto& detection=detections[i];
+        const auto& rel_bbox = detection.location_data().relative_bounding_box();
+        float xmin = rel_bbox.xmin();
+        float ymin = rel_bbox.ymin();
+        float width = rel_bbox.width();
+        float height = rel_bbox.height();
+        int abs_xmin = static_cast<int>(xmin * img_width)-10;
+        if(abs_xmin<0)abs_xmin=0;
+        int abs_ymin = static_cast<int>(ymin * img_height)-10;
+        if(abs_ymin<0)abs_ymin=0;
+        int abs_width = static_cast<int>(width * img_width)+20;
+        int abs_height = static_cast<int>(height * img_height)+20;
+        std::string text="("+std::to_string(abs_xmin);
+        text=text+","+std::to_string(abs_ymin);
+        text=text+","+std::to_string(abs_width);
+        text=text+","+std::to_string(abs_height);
+        text=text+")";
+        cv::putText(image,text,cv::Point(abs_xmin,abs_ymin),cv::FONT_HERSHEY_COMPLEX,1.0,cv::Scalar(255,0,0));
+        cv::rectangle(image,cv::Point(abs_xmin,abs_ymin),cv::Point(abs_xmin+abs_width,abs_ymin+abs_height),cv::Scalar(0,0,255),2);
+        image(cv::Rect(abs_xmin,abs_ymin,abs_width,abs_height)).copyTo(firstface);
+        break;
+      }
     }
     return face_num;
 }

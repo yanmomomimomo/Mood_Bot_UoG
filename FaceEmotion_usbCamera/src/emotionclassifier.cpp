@@ -20,8 +20,6 @@ int EmotionClassifier::predict(cv::Mat &img)
     cv::resize(img,resized_image,cv::Size(224,224));
     cv::Mat float_image;
     resized_image.convertTo(float_image,CV_32FC3,1.0/255.0);
-    //cv::imshow("processed",float_image);
-    //cv::waitKey(1);
     std::vector<int64_t> input_shape = {1, 3, 224, 224};
     std::vector<float> input_tensor(1*3*224*224);
         // NHWC to NCHW
