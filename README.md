@@ -473,6 +473,68 @@ useEffect(() => {
 
 This technology stack combination balances efficient development, excellent user experience, and maintainability, making it ideal for IoT control panel applications.  
 
+### Emotion Detection
+#### 1. Project Motivation
+
+This project aims to build an emotion regulation software that can run on Raspberry Pi. The system detects a human face through a video camera, recognizes the current emotion of the person, and gives corresponding reactions. It enhances human-computer interaction and helps people cope with negative emotions such as anger, sadness, fear, or tiredness.
+
+#### 2. Planned Delivery Content
+
+- Main coding will be done in C++.  
+- The system runs on Raspbian OS based on Debian Bookworm on a Raspberry Pi 5 with 4GB memory.  
+- Video frames are captured via a video camera using OpenCV and faces and emotions are detected at about 10 FPS.  
+- Upon detecting happy emotions, the system displays a happy emoji and phrases like “You are happy and I am happy too” and plays a notification sound.  
+- For negative emotions, it displays a sad emoji with comforting words like “do not be sad.”  
+- If the person looks very tired, it suggests taking a rest.
+
+#### 3. Related Work
+
+- A facial emotion recognition system mainly consists of face detection and emotion recognition.  
+- Common face detection methods include SSD, YOLO, OpenCV Haar, and MediaPipe.  
+- Emotion recognition often uses CNN-based neural networks or vision transformers.  
+- Considering the constraints of Raspberry Pi 5 (4GB RAM), real-time performance, and C++ implementation, MediaPipe detection was chosen.  
+- MediaPipe uses a TensorFlowLite int8 quantized Blazeface model that is fast, memory efficient, and effective.
+
+#### 4. Development Progress
+
+##### a. Hardware Selection
+
+- Main board: Raspberry Pi 5  
+  - Features a 64-bit quad-core Arm Cortex-A76 processor at 2.4 GHz, delivering up to 3x the performance of its predecessor.  
+  - Supports graphics-intensive tasks like 4K video playback and 3D rendering.  
+  - The 4GB memory model is used.  
+- Camera: Logitech USB HD webcam C270  
+  - Provides reliable 720p HD video with autofocus for sharp images under moderate lighting.  
+  - Compatible with Raspberry Pi 5 and OpenCV.
+
+##### b. Software Design
+
+- Development environment: Qt Creator  
+- GUI library: Qt5  
+- Build toolchains: bazel, cmake, GNU configured  
+- Libraries: Qt5, OpenCV from Ubuntu source, MediaPipe from GitHub  
+- Software process: Two threads  
+  - GUI thread: displays interface, video frames, and emotion reactions  
+  - Background thread: detects faces, extracts face regions, runs emotion recognition model  
+- Emotion recognition model: MobileNetV3-Small optimized using Adam optimizer and cross-entropy in PyTorch  
+- Dataset: RAF-DB plus additional tired-face images, split into training and validation sets  
+- Model accuracy: 83% on validation set  
+- Model converted to ONNX format for efficient inference using ONNX Runtime  
+- Sound playback via Qt Multimedia library  
+- Final integration and build with bazel toolchain
+
+#### 5. Performance Evaluation
+
+- Runs smoothly on Raspberry Pi 5 at ~10 FPS with no crashes during tests.  
+- Accurately detects single faces in camera view.  
+- Emotion recognition results are satisfactory with correct identification of varied facial expressions.  
+- Weakness: tired face recognition is less accurate.
+
+#### 6. Remaining Tasks in Final Project Demonstration and Report
+
+- The system effectively performs face detection and emotion recognition with appropriate responses.  
+- It operates well on Raspberry Pi 5 and has promising applications and development potential.  
+- Future work includes improving emotion recognition performance, especially for tired faces.
 
 
 
