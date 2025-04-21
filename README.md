@@ -535,7 +535,125 @@ This project aims to build an emotion regulation software that can run on Raspbe
 - The system effectively performs face detection and emotion recognition with appropriate responses.  
 - It operates well on Raspberry Pi 5 and has promising applications and development potential.  
 - Future work includes improving emotion recognition performance, especially for tired faces.
+### Motor Control
 
+#### File Structure and Function Description
+
+1. **pwm_class.hpp**  
+- Defines the `PWM_class`, responsible for managing PWM signals and controlling the motor.  
+- Main members:  
+  - Constructor `PWM_class(uint8_t PWM_number)`: Initializes corresponding GPIO pins based on the given PWM number.  
+  - Destructor `~PWM_class()`: Releases GPIO resources and stops PWM output.  
+  - Member function `Rotation(uint8_t dir)`: Controls motor rotation direction (stop, clockwise, counterclockwise).  
+- Private members include two PWM pins, period and duty cycle parameters, and a pointer linked to the GPIO controller.
+
+2. **gpio_pwm.hpp**  
+- Defines constants and structs related to PWM control.  
+- Contains PWM-related GPIO numbers and consumer identifiers.  
+- Defines PWM operation command constants: Stop, Clockwise, Cou_Clockwise.  
+- Struct `PWM_Pin` encapsulates GPIO line pointer, consumer string, and GPIO pin number.
+
+3. **gpio_pwm.cpp**  
+- Implements the `PWM_class` functions.  
+- Constructor obtains GPIO lines for the given PWM group number and requests them as outputs.  
+- `Rotation` sets the high/low levels of two PWM pins according to the direction parameter, using delay to control pulse width.  
+- Destructor sets PWM pins low and releases GPIO resources.
+
+#### Detailed Function Description
+
+- `PWM_class(uint8_t PWM_number)`  
+  Initializes a PWM instance, binds two GPIO pins of the corresponding PWM group, and requests output permission to prepare for PWM signal output.
+
+- `~PWM_class()`  
+  Stops PWM output and releases GPIO line resources.
+
+- `void Rotation(uint8_t dir)`  
+  Generates PWM signals for different motor directions by controlling GPIO pin voltage levels and duty cycle delays:  
+  - **Stop**: outputs all low levels, motor stops.  
+  - **Clockwise**: sets `PWM_0_` pin high first; controls power-on duration via duty cycle to rotate clockwise.  
+  - **Cou_Clockwise**: sets `PWM_1_` pin high first; controls power-on duration via duty cycle to rotate counterclockwise.
+
+#### Basic Principle of PWM Motor Driving and Code Implementation
+
+##### Principle Summary  
+PWM (Pulse Width Modulation) controls the average voltage supplied to the motor by adjusting the duty cycle—the ratio of high-level (on) time to the signal period—thus regulating motor speed and direction. Two PWM signals alternately control power on both ends of the motor to achieve forward and reverse rotations.
+
+##### Code Implementation Details  
+- A period variable is defined (1000 microseconds), with a default duty cycle of 50%.  
+- In the `Rotation` function, based on the target rotation direction, PWM output is achieved by setting two GPIO pins’ levels:  
+  - High/low voltage combinations determine motor polarity and rotation direction.  
+  - Use of `usleep` delays generates the corresponding high and low level durations to form periodic PWM signals.
+
+### Servo Control
+
+#### File Structure and Function Description
+
+1. **Servo.hpp**  
+- Defines basic macros and constants needed for servo control.  
+- Includes PWM period macro definition (`PERIOD_US`, 1ms) and GPIO chip path (`GPIO_CHIP`).  
+- Defines GPIO pin numbers for two servos: Servo1 (24) and Servo2 (25).  
+- Includes necessary multithreading and mutex header files.
+
+2. **Servo_class.hpp**  
+- Declares the `Servo_class` C++ class to manage GPIO resources based on the `gpiod` library and implement PWM control of servos.  
+- Main public member methods:  
+  - Constructor `Servo_class(const char* chip_path = GPIO_CHIP)`: Opens the specified GPIO chip.  
+  - Destructor `~Servo_class()`: Closes the GPIO chip.  
+  - `Servo_init()`: Initializes and checks if the chip was successfully opened.  
+  - `set_pwm_output(int pin, int duty_cycle_percent)`: Sets PWM output based on duty cycle percentage.  
+  - `set_pwm_pulse_ms(int pin, float pulse_ms)`: Sets PWM signal using pulse width in milliseconds.  
+  - `Servo_disable(int pin)`: Stops PWM output on the specified GPIO pin.  
+  - `release_gpio()`: Releases all requested GPIO resources.  
+  - Servo movement helper functions: `Servo_up(int pin)` and `Servo_down(int pin)` implement upward and downward servo movements respectively.  
+- Private members include:  
+  - Pointer managing the GPIO chip, threads, running states, and GPIO line mappings.  
+  - Private interface `get_gpio_line(int pin)` to obtain GPIO lines.
+
+3. **Servo.cpp**  
+- Implements the `Servo_class`.  
+- Uses the `gpiod` library to manage GPIO line requests and releases, ensuring thread safety.  
+- The `set_pwm_output` method stops existing PWM threads (if any) and creates new threads that simulate PWM output via software delay, with a 1ms signal period.  
+- The `set_pwm_pulse_ms` method generates pulse width signals common in servo control (0.5ms–2.5ms) with a 20ms period (50Hz), conforming to standard servo PWM protocol.  
+- The `Servo_disable` method stops and cleans up the PWM thread on the GPIO pin, effectively stopping PWM output.  
+- The `release_gpio` method releases all occupied GPIO lines.  
+- `Servo_up` and `Servo_down` call `set_pwm_pulse_ms` to generate corresponding pulse signals for servo rising and lowering, then stop PWM output afterward.
+
+#### Detailed Function Description
+
+- `Servo_class::Servo_class(const char* chip_path)`  
+  Initializes the object and opens the specified GPIO chip device.
+
+- `bool Servo_class::Servo_init()`  
+  Checks whether the GPIO chip was successfully opened and sets initialization status.
+
+- `gpiod_line* Servo_class::get_gpio_line(int pin)`  
+  Obtains the GPIO line for the specified pin and requests output rights if not already acquired.
+
+- `void Servo_class::set_pwm_output(int pin, int duty_cycle_percent)`  
+  Software PWM controlled by duty cycle percentage: starts a thread that continuously toggles the pin high/low to generate PWM.
+
+- `void Servo_class::set_pwm_pulse_ms(int pin, float pulse_ms)`  
+  Generates PWM signals with pulse widths ranging from 0.5ms to 2.5ms at 20ms period to control servo angle.
+
+- `void Servo_class::Servo_disable(int pin)`  
+  Stops and cleans up the PWM control thread on the given pin, disabling PWM output.
+
+- `void Servo_class::release_gpio()`  
+  Releases all requested GPIO lines to ensure clean GPIO states at program exit.
+
+- `void Servo_class::Servo_up(int pin)`, `void Servo_class::Servo_down(int pin)`  
+  Perform servo upward or downward movements by sending specific pulse widths, then disable PWM output after the action.
+
+#### Basic Principle of PWM Servo Driving and Code Implementation
+
+##### Principle  
+Servo control signals are PWM signals with a 20ms period (50Hz). The servo angle is controlled by adjusting pulse width within approximately 0.5ms to 2.5ms, corresponding to minimum and maximum angles. The duty cycle of the PWM directly determines the servo shaft position.
+
+##### Code Implementation  
+- The function `set_pwm_pulse_ms` starts a dedicated thread that continuously outputs a high level for the specified pulse duration (`pulse_ms`), then outputs low level to complete the 20ms cycle.  
+- The high-level duration controls the servo angle; the thread keeps generating PWM to maintain servo position.  
+- Software PWM is implemented by controlling GPIO output via the `gpiod` library and `usleep` for microsecond-level timing, emulating hardware PWM.  
+- This method allows Raspberry Pi GPIO to precisely drive MG996R servos, achieving the required rotational control.
 
 
 ## Code Structure
