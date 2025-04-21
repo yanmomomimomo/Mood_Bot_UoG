@@ -156,25 +156,91 @@ int main() {
 ```
 
 ---
+### LCD Display Functions  
 
+| Function          | Description                                           |  
+|-------------------|-----------------------------------------------------|  
+| Basic Display     | Display static images, text, and geometric shapes (points/lines/rectangles) |  
+| Full Screen Control | Clear screen (solid color fill), full-screen image display |  
+| Partial Refresh   | Update specified coordinate area content (e.g., partial animation) |  
+| Orientation Adaptation | Support switching between horizontal (HORIZONTAL) and vertical (VERTICAL) modes |  
+| Low Power Management | Backlight control (BL pin), sleep/wake commands      |  
+
+#### Simplified Code Architecture  
+
+##### 1.Header File (LCD_class.hpp)  
+
+```cpp  
+class LCD_class {  
+public:  
+    LCD_class(uint16_t width, uint16_t height, uint8_t scan_dir); // Constructor: resolution + orientation  
+    void DrawPixel(uint16_t x, uint16_t y, uint16_t color);      // Draw point (input: coordinates + RGB565 color)  
+    void FillScreen(uint16_t color);                             // Fill full screen (input: RGB565 color)  
+    void DisplayImage(const uint16_t* img);                      // Display image (input: RGB565 array)  
+private:  
+    void SendCommand(uint8_t cmd);                               // Send command (input: 1-byte command)  
+    void SendData(uint8_t data);                                 // Send data (input: 1-byte data)  
+    // ... private members for GPIO pins and SPI handles  
+};
+```
+##### 2.Driver Implementation (LCD.cpp)
+
+| Function           | Purpose                                   | Input/Output                  |
+|--------------------|-----------------------------------------|--------------------------------|
+| LCD_SendCommand    | Send control command (e.g., 0x2A for column address) | Input: 1-byte command        |
+| LCD_SendData_16Bit | Send RGB565 pixel data                   | Input: 16-bit color value     |
+| LCD_SetWindows     | Set display coordinate region           | Input: x_start, y_start, x_end, y_end |
+| LCD_1IN47_InitReg | Send screen initialization command sequence | No input                     |
+##### 3.Hardware Configuration (LCD_Config.cpp)
+```cpp  
+// Pin definitions (must match actual hardware)
+#define LCD_CS_PIN  10   // GPIO10 connected to screen CS
+#define LCD_DC_PIN  4    // GPIO4 connected to screen DC
+#define LCD_RST_PIN 17   // GPIO17 connected to screen RST
+#define LCD_BL_PIN  18   // GPIO18 connected to backlight control
+
+// SPI Configuration
+#define SPI_CLOCK_SPEED 40000000 // 40MHz
+
+```
+##### 4.Hardware Configuration (LCD_Config.cpp)
+
+| LCD Pin | Master GPIO | Function            | Signal Description     |  
+|---------|-------------|---------------------|-----------------------|  
+| CS      | GPIO10      | Chip Select         | Active low            |  
+| DC      | GPIO4       | Data/Command Select | 0 = Command, 1 = Data |  
+| RST     | GPIO17      | Hardware Reset      | Active low trigger    |  
+| BL      | GPIO18      | Backlight Control   | High level turns on   |  
+| SCL     | SPI0_SCK    | SPI Clock           | Output from master    |  
+| SDA     | SPI0_MOSI   | SPI Data Output     | Output from master    |  
+| VCC     | 3.3V        | Power Positive      | -                     |  
+| GND     | GND         | Power Ground        | -                     |  
+
+---  
+##### 5.Hardware Configuration (LCD_Config.cpp)
+Summary of Code Files and Core Content  
+
+| File           | Core Content                                                        |  
+|----------------|-------------------------------------------------------------------|  
+| LCD_class.hpp  | Defines LCD operation interface (drawing, control, resolution, orientation etc.) |  
+| LCD.cpp        | Implements SPI communication, pixel drawing, window setting       |  
+| LCD_Config.cpp | Hardware parameters configuration: pins, SPI speed, initialization commands |  
+| LCD_main.cpp   | Test cases: image display, color fills, performance tests         | 
+
+##### 6.Example Key Function Call Flow
+Draw a red pixel at (50, 80):  
+
+- `LCD_SetWindows(50, 80, 51, 81)` → Set single-pixel window  
+- `LCD_SendCommand(0x2C)` → Enter data write mode  
+- `LCD_SendData_16Bit(0xF800)` → Send red color (RGB565: 0xF800)
+- 
+##### 7.Porting Notes  
+
+- **Pin Check:** Confirm GPIO numbers in `LCD_Config.cpp` match hardware connections  
+- **SPI Configuration:** Ensure master SPI clock speed is within screen specifications (ST7789 usually supports 80MHz)  
+- **Orientation Calibration:** If displayed content is rotated incorrectly, adjust `Scan_dir` parameter or initialization commands  
 ## Code Structure
 ## How it works
-### Motor
-### GUI
-### Camera
-
-It captures video frames through a video camera by Opencv, detect faces and emotions at about 10fps. If it detects happy emotions, it will display a happy emoji and words like “ You are happy and I am happy too” and play notification sound. If it detects negative emotions, it will comfort you by showing a sad emoji and words like ”do not be sad”. If it detects that the person is very tired, it will let him go have a rest.
-
-### Main Thread
-
-## Issues during development
-
-- 
-
-## Future Work
-
-- 
-
 
 
 
