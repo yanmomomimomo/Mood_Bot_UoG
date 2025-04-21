@@ -61,6 +61,23 @@ With the increasing popularity of smart home devices and emotionally interactive
 -  Zihan Xu - 2764591X
 [Mccona](https://github.com/Mccona)
 
+## Contribution
+-  Quan Yuan - 3046818Y: Designed and developed the MoodBot frontend using React with Hooks, modularized into emotion recognition with LED feedback, environment monitoring, motion control, and remote monitoring. Integrated real-time communication via Socket.IO with backend WebSocket and conducted debugging for I2C and SPI screens.
+
+Implemented a responsive UI with dynamic states, managed component lifecycle and state effectively. Created a systemd service for deployment and provided detailed technical documentation.
+
+Optimized resource cleanup and modular CSS to ensure stable and independent module operation.
+
+-  Linzheng Li - 2930588L: Developed a comprehensive three-layer event-driven architecture consisting of the Hardware Layer, Event-driven Interface Layer, and Event Bus Layer. This evolved the control framework from a simple point-to-point model into a fully asynchronous event-driven system.
+
+Enhanced the Event Bus to support numerical data transmission, enabling complex asynchronous interactions including one-to-many, many-to-one, and many-to-many event relationships.
+
+Integrated and implemented drivers for eight hardware modules, covering sensors such as the QM2 smoke sensor, DHT11 temperature and humidity sensor, 5516 photosensitive resistor sensor, and RD-03 human radar module, as well as actuators and displays including a USB speaker (using SDL2), servo motor, and L298N DC motor driver board.
+
+-  Sicheng Li - 3049797L: Developed driver programs for the servo motor and two DC motors, configuring Raspberry Pi GPIO to support multithreaded PWM signal output and control. Enabled the servo and motors to track faces based on recognized facial data and execute predefined movement actions accordingly.
+Additionally, designed the hardware circuitry for the robot to support these functionalities.
+
+
 ## Hardware List
 
 | Hardware Component                              | Description                                                              | Quantity |
