@@ -1,0 +1,38 @@
+/* Enable scrolling for the entire page */
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100vh;
+  overflow-y: auto; /* Enable vertical scrolling */
+  font-family: Arial, sans-serif;
+  background-color: #f8f9fa; /* Light background color */
+  scroll-behavior: smooth; /* Smooth scrolling */
+}
+
+/* Make root fill the entire viewport */
+#root {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh; /* Make root element fill at least the entire screen */
+}
+
+/* Make container content fit the page */
+.container {
+  max-width: 800px;
+  padding: 20px;
+  text-align: center;
+}
+
+/* Give cards larger margin to ensure enough content for scrolling */
+.card {
+  background: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  margin: 50px auto; /* Increased margin */
+  box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+  width: 80%;
+  max-width: 600px;
+  text-align: center;
+}
