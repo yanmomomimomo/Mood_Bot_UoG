@@ -51,7 +51,7 @@ With the increasing popularity of smart home devices and emotionally interactive
 -  Linzheng Li - 2021000001
   [[MoonupLee](https://github.com/MoonupLee)]
   
--  Sicheng Li - 2021000001
+-  Sicheng Li - 3049797L
   [yanmomomimomo](https://github.com/yanmomomimomo)
   
 -  Quan Yuan - 3046818Y
