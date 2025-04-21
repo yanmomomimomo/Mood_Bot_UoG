@@ -1,0 +1,43 @@
+file(REMOVE_RECURSE
+  "CMakeFiles/LCD_EG.dir/LCD.cpp.o"
+  "CMakeFiles/LCD_EG.dir/LCD.cpp.o.d"
+  "CMakeFiles/LCD_EG.dir/LCD_Config.cpp.o"
+  "CMakeFiles/LCD_EG.dir/LCD_Config.cpp.o.d"
+  "CMakeFiles/LCD_EG.dir/LCD_main.cpp.o"
+  "CMakeFiles/LCD_EG.dir/LCD_main.cpp.o.d"
+  "CMakeFiles/LCD_EG.dir/home/MootBot/MoodBot_Product/BSP/BSP_KEYS/Keys.cpp.o"
+  "CMakeFiles/LCD_EG.dir/home/MootBot/MoodBot_Product/BSP/BSP_KEYS/Keys.cpp.o.d"
+  "CMakeFiles/LCD_EG.dir/home/MootBot/MoodBot_Product/BSP/BSP_LED/Led.cpp.o"
+  "CMakeFiles/LCD_EG.dir/home/MootBot/MoodBot_Product/BSP/BSP_LED/Led.cpp.o.d"
+  "CMakeFiles/LCD_EG.dir/home/MootBot/MoodBot_Product/SYS_Con/src/I2C_Command.cpp.o"
+  "CMakeFiles/LCD_EG.dir/home/MootBot/MoodBot_Product/SYS_Con/src/I2C_Command.cpp.o.d"
+  "CMakeFiles/LCD_EG.dir/home/MootBot/MoodBot_Product/SYS_Con/src/SPI_Command.cpp.o"
+  "CMakeFiles/LCD_EG.dir/home/MootBot/MoodBot_Product/SYS_Con/src/SPI_Command.cpp.o.d"
+  "CMakeFiles/LCD_EG.dir/home/MootBot/MoodBot_Product/SYS_Con/src/Setter_EventDriven.cpp.o"
+  "CMakeFiles/LCD_EG.dir/home/MootBot/MoodBot_Product/SYS_Con/src/Setter_EventDriven.cpp.o.d"
+  "CMakeFiles/LCD_EG.dir/home/MootBot/MoodBot_Product/SYS_Con/src/Sys_Functions.cpp.o"
+  "CMakeFiles/LCD_EG.dir/home/MootBot/MoodBot_Product/SYS_Con/src/Sys_Functions.cpp.o.d"
+  "CMakeFiles/LCD_EG.dir/home/MootBot/MoodBot_Product/lib/Face/angry_face.cpp.o"
+  "CMakeFiles/LCD_EG.dir/home/MootBot/MoodBot_Product/lib/Face/angry_face.cpp.o.d"
+  "CMakeFiles/LCD_EG.dir/home/MootBot/MoodBot_Product/lib/Face/happy_face.cpp.o"
+  "CMakeFiles/LCD_EG.dir/home/MootBot/MoodBot_Product/lib/Face/happy_face.cpp.o.d"
+  "CMakeFiles/LCD_EG.dir/home/MootBot/MoodBot_Product/lib/Face/normal_face.cpp.o"
+  "CMakeFiles/LCD_EG.dir/home/MootBot/MoodBot_Product/lib/Face/normal_face.cpp.o.d"
+  "CMakeFiles/LCD_EG.dir/home/MootBot/MoodBot_Product/lib/Face/sad_face.cpp.o"
+  "CMakeFiles/LCD_EG.dir/home/MootBot/MoodBot_Product/lib/Face/sad_face.cpp.o.d"
+  "CMakeFiles/LCD_EG.dir/home/MootBot/MoodBot_Product/lib/Face/sleep_face.cpp.o"
+  "CMakeFiles/LCD_EG.dir/home/MootBot/MoodBot_Product/lib/Face/sleep_face.cpp.o.d"
+  "CMakeFiles/LCD_EG.dir/home/MootBot/MoodBot_Product/lib/Face/think_face.cpp.o"
+  "CMakeFiles/LCD_EG.dir/home/MootBot/MoodBot_Product/lib/Face/think_face.cpp.o.d"
+  "CMakeFiles/LCD_EG.dir/home/MootBot/MoodBot_Product/lib/Fonts/font12.c.o"
+  "CMakeFiles/LCD_EG.dir/home/MootBot/MoodBot_Product/lib/Fonts/font12.c.o.d"
+  "CMakeFiles/LCD_EG.dir/home/MootBot/MoodBot_Product/lib/Fonts/font16.c.o"
+  "CMakeFiles/LCD_EG.dir/home/MootBot/MoodBot_Product/lib/Fonts/font16.c.o.d"
+  "LCD_EG"
+  "LCD_EG.pdb"
+)
+
+# Per-language clean rules from dependency scanning.
+foreach(lang C CXX)
+  include(CMakeFiles/LCD_EG.dir/cmake_clean_${lang}.cmake OPTIONAL)
+endforeach()
