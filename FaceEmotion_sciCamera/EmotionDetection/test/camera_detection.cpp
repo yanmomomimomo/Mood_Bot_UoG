@@ -1,6 +1,7 @@
 #include <iostream>
 #include <opencv2/opencv.hpp>
 #include <string>
+#include "libcam2opencv.h"
 // 使用正确的头文件路径
 #include "/home/mood/libcamera2opencv/libcam2opencv.h"
 
