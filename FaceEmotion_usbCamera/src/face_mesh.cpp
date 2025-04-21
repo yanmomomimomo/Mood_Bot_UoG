@@ -2,6 +2,9 @@
 #include <iostream>
 #include <thread>
 using namespace std;
+int img_width = 640;  
+int img_height = 480;
+      
 extern QString emotion_model_path;
 FaceMesh::FaceMesh()
 {
@@ -77,8 +80,8 @@ int FaceMesh::extractFace(cv::Mat& image,cv::Mat &firstface)
       float ymin = rel_bbox.ymin();
       float width = rel_bbox.width();
       float height = rel_bbox.height();
-      int img_width = 1280;  
-      int img_height = 720;
+      int img_width = 640;  
+      int img_height = 480;
       int abs_xmin = static_cast<int>(xmin * img_width)-10;
       if(abs_xmin<0)abs_xmin=0;
       int abs_ymin = static_cast<int>(ymin * img_height)-10;
@@ -96,8 +99,8 @@ void FaceMesh::runVideo()
 {
     capture=cv::VideoCapture(0);
     // RET_CHECK(capture.isOpened());
-    //capture.set(cv::CAP_PROP_FRAME_WIDTH, 640);
-    //capture.set(cv::CAP_PROP_FRAME_HEIGHT, 480);
+    capture.set(cv::CAP_PROP_FRAME_WIDTH, img_width);
+    capture.set(cv::CAP_PROP_FRAME_HEIGHT, img_height);
     fps=10;
     timer_for_render->start(1000/fps);
 }

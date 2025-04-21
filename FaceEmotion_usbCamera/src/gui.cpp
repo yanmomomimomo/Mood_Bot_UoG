@@ -2,6 +2,8 @@
 #include <iostream>
 
 using namespace std;
+extern int img_width;  
+extern int img_height;
 
 Gui::Gui()
 {
@@ -13,12 +15,12 @@ Gui::Gui()
     display_center->setStyleSheet("background:rgb(100,100,100);");
     control_layout=new QVBoxLayout;
     display_center->setLayout(control_layout);
-    display_center->setMinimumWidth(1280);
-    display_center->setMaximumWidth(1280);
+    display_center->setFixedWidth(img_width);
+    //display_center->setMaximumWidth(640);
     display_face=new QLabel;
     display_face->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Expanding);
-    display_face->setMinimumHeight(720);
-    display_face->setMaximumHeight(720);
+    display_face->setFixedHeight(img_height);
+    //display_face->setMaximumHeight(720);
     display_face->setStyleSheet("background:rgb(200,200,200);");
     display_emoji=new QLabel();
     display_emoji->setFont(font20);
