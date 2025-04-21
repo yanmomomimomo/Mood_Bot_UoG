@@ -4,7 +4,7 @@ FaceEmotion_v0 is the very initial trying to have a try about face detection and
 
 FaceEmotion_sciCamera  is the next version, trying to use more open-sourced libraries, including [libcamera2opencv](https://github.com/berndporr/libcamera2opencv). It is built on the foundation of an [open-source project](https://blog.csdn.net/guyuealian/article/details/129467023). (Note that there is a spelling mistake in the folder name, due to a bad and massive libs management, it would be hard to fix that, so this method was abandoned.) But a wired bug encountered while testing. The example “qtviewer” provided within the libcamera2opencv seems to be incompatible with Logitech C270 USB Camera. 
 
-![qtviewer_bug](assets\qtviewer_bug.png)
+![qtviewer_bug](https://github.com/yanmomomimomo/Mood_Bot_UoG/blob/FacialRecog/assets/qtviewer_bug.png)
 
 In our previous design, we found that the Raspberry Pi's arithmetic power was still on the low side and could overheat easily, so after comparing many different models as well as visual processing libraries. It was found that Mediapipe would be a very good choice. In our previous design, we found that the Raspberry Pi's arithmetic power was still on the low side and could overheat easily, so after comparing many different models as well as visual processing libraries. It was found that Mediapipe would be a very good choice. It is specially designed for mobile, especially suitable for devices with limited resources for real-time face detection, expression recognition, face tracking and other complex tasks, and it has an official C++ API, which can be well integrated into embedded C++ projects. What's even more surprising is that Mediapipe provides a Face Mesh of up to 468 keypoints while maintaining a very fast inference speed.
 
