@@ -470,6 +470,97 @@ useEffect(() => {
 - Responsive design adapts to various screen sizes  
 - User-friendly interactions with button feedback and card hover effects  
 - Modularized functional components that facilitate maintenance and scalability  
+Script Content:
+#!/bin/bash
+SERVICE_NAME=npmdev
+WORKING_DIR="/home/pi/Download
+"SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}.service
+
+# Check if the target directory exists
+if [ ! -d "$WORKING_DIR" ]; then
+    echo "❌ Directory $WORKING_DIR does not exist. Please verify the project path!"
+    exit 1
+fi
+
+# Create systemd service file
+sudo tee "$SERVICE_FILE" > /dev/null <<EOF
+[Unit]
+Description=Start npm dev server on boot
+After=network.target
+
+[Service]
+ExecStart=/bin/bash -c 'cd ${WORKING_DIR} && npm run dev'
+WorkingDirectory=${WORKING_DIR}
+User=pi
+Restart=always
+Environment=PATH=/usr/bin:/usr/local/bin
+Environment=NODE_ENV=production
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# Reload systemd and enable the service
+echo "🔄 Reloading systemd and enabling the service..."
+sudo systemctl daemon-reexec
+sudo systemctl daemon-reload
+sudo systemctl enable "$SERVICE_NAME"
+sudo systemctl start "$SERVICE_NAME"
+
+# Display service status
+echo "✅ Service started. Current status:"
+sudo systemctl status "$SERVICE_NAME" --no-pager
+
+echo -e "\n🎉 Setup complete! The service will now run automatically on boot."
+Auto-run Script:
+Usage:
+1.	Save the script as setup_npm_service.sh
+2.	Grant execute permissions:
+bash
+Copy
+Download
+chmod +x setup_npm_service.sh
+3.	Run the script:
+bash
+Copy
+Download
+./setup_npm_service.sh
+________________________________________
+Mood Recognition and LED Display
+Button:
+•	Trigger Function: handleMoodChange(mood)
+•	Send Event: socket.emit('mood', mood)
+•	Data Passed: A string representing the current mood: '😊', '😢', or '😴'.
+•	Backend Handling: The backend listens for the 'mood' event and updates the LED display or performs corresponding actions based on the received mood value.
+Smart Environment Control
+Button:
+•	Check Environment
+•	Trigger Function: socket.emit('checkEnvironment')
+•	Send Event: 'checkEnvironment'
+•	Backend Handling: The backend listens for the 'checkEnvironment' event, reads the current temperature and CO₂ concentration data, and sends the data back to the frontend via the 'environment' event.
+•	Frontend Reception: In useEffect, the frontend listens for the 'environment' event, receives the data, and updates the state.
+Movement Control
+Buttons:
+•	Forward, Left, Right, Backward
+•	Trigger Function: handleMove(direction)
+•	Send Event: socket.emit('move', direction)
+•	Data Passed: A string representing the movement direction: 'forward', 'left', 'right', 'backward'.
+•	Backend Handling: The backend listens for the 'move' event and controls MoodyBot's movement based on the received direction command.
+Game Mode
+Button:
+•	Start Game Mode
+•	Trigger Function: startGameMode()
+•	Send Event: socket.emit('gameMode', true)
+•	Data Passed: A boolean true, indicating the activation of game mode.
+•	Backend Handling: The backend listens for the 'gameMode' event and activates the corresponding game mode functionality.
+Remote Monitoring
+Button:
+•	Start Monitoring
+•	Trigger Function: startMonitoring()
+•	Send Event: socket.emit('startMonitoring', true)
+•	Data Passed: A boolean true, indicating the activation of remote monitoring.
+•	Backend Handling: The backend listens for the 'startMonitoring' event and activates the remote monitoring functionality.
+
 
 This technology stack combination balances efficient development, excellent user experience, and maintainability, making it ideal for IoT control panel applications.  
 
