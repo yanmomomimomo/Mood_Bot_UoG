@@ -361,7 +361,121 @@ private:
 
 - Reduce frequency of `OLED_updateDisplay()` calls (e.g., use partial refresh)
 
- 
+### MoodBot Intelligent Desktop Companion - Frontend Interface Overview
+
+MoodBot is an innovative intelligent desktop companion system frontend built with React. It provides real-time interaction and status monitoring functionalities with hardware devices.
+
+#### Main Functional Modules
+
+1. **Mood Recognition and LED Display**
+   - Real-time mood feedback: Receives mood status updates pushed from the backend, displaying current mood icons (😊 Happy / 😢 Sad / 😴 Tired)
+   - Visual representation: Highlights the currently active mood status
+   - Dynamic update: Uses WebSocket to receive mood changes in real time
+
+2. **Smart Environment Control**
+   - Environmental data monitoring: Displays real-time temperature and CO₂ concentration
+   - Manual detection button: Allows triggering environment detection requests anytime
+   - Automatic updates: Environment data is also automatically pushed via WebSocket
+
+3. **Motion Control**
+   - Direction control: Offers four movement buttons for forward, backward, left, and right
+   - Real-time command sending: Clicking a button immediately sends a move command to the backend
+
+4. **Remote Monitoring**
+   - Monitoring activation: Starts remote monitoring feature via a button
+
+#### Technical Features
+
+- Real-time communication with full-duplex via Socket.IO
+- Responsive design using card-style layout for clear module displays
+- State management using React Hooks
+- Automatic cleanup: event listeners unsubscribed and connections closed on component unmount
+
+#### Usage Instructions
+
+- Ensure backend service is running at http://localhost:3000  
+- WebSocket connection is established automatically on page load  
+- Modules operate independently without interference  
+- All data updates are pushed in real time without manual refresh  
+
+This frontend serves as the control center of the MoodBot system, providing users with intuitive interactions and real-time status feedback, making the intelligent desktop companion easy and enjoyable to operate.
+
+---
+
+### MoodBot Frontend Technology Stack Analysis
+
+#### Core Frameworks and Technologies
+
+- **React**: Main JavaScript library for building user interfaces  
+  - Function components and Hooks (`useState`, `useEffect`)  
+  - Component-based development  
+
+- **Socket.IO client**: For real-time bidirectional communication  
+  - Connects via `io('http://localhost:3000')`  
+  - Listens with `socket.on()` for server events  
+  - Sends events with `socket.emit()`  
+
+- **CSS Modularization**: Style management  
+  - Separate CSS file (App.css)  
+  - Class selectors (`.container`, `.card` etc.)  
+  - Includes transition animations  
+
+#### Detailed Technical Implementation
+
+- **State Management**  
+  - React Hooks  
+    - `useState`: manages internal state (`currentMood`, `temperature`, `co2Level`)  
+    - `useEffect`: handles side effects (subscribe/unsubscribe to socket events, component cleanup)  
+
+- **Real-time Communication**  
+  - Event-driven architecture  
+  - Listens to backend pushed events `'moodUpdate'` and `'environment'`  
+  - Emits `'move'`, `'gameMode'`, `'startMonitoring'` events to backend  
+
+- **UI Design**  
+  - Responsive layout  
+  - Card-style design with `.card` class  
+  - Hover effect with `:hover` pseudo-class  
+  - Adaptive width with `max-width: 600px`  
+  - Interactive elements for buttons (`button` selector), status display (`.status-box`), and mood selector (`.mood-item`)  
+
+#### Featured Technical Applications
+
+- **CSS Transition Effects**  
+  ```css
+  .card {
+    transition: transform 0.3s, box-shadow 0.3s;
+  }
+  .card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  }
+#### Dynamic Class Name Switching
+
+```jsx
+<div className={`mood-item ${currentMood === '😊' ? 'active' : ''}`}>
+```
+#### WebSocket Connection Management
+```javascript
+useEffect(() => {
+  return () => {
+    socket.disconnect();
+  };
+}, []);
+
+```
+#### Technical Highlights  
+
+- Real-time updates at millisecond level via Socket.IO  
+- Responsive design adapts to various screen sizes  
+- User-friendly interactions with button feedback and card hover effects  
+- Modularized functional components that facilitate maintenance and scalability  
+
+This technology stack combination balances efficient development, excellent user experience, and maintainability, making it ideal for IoT control panel applications.  
+
+
+
+
 ## Code Structure
 ## How it works
 
