@@ -288,7 +288,6 @@ Draw a red pixel at (50, 80):
 - `LCD_SetWindows(50, 80, 51, 81)` → Set single-pixel window  
 - `LCD_SendCommand(0x2C)` → Enter data write mode  
 - `LCD_SendData_16Bit(0xF800)` → Send red color (RGB565: 0xF800)
-- 
 ##### 7.Porting Notes  
 
 - **Pin Check:** Confirm GPIO numbers in `LCD_Config.cpp` match hardware connections  
