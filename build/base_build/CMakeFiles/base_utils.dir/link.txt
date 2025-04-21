@@ -1,0 +1,2 @@
+/usr/bin/ar qc libbase_utils.a CMakeFiles/base_utils.dir/src/debug.cpp.o CMakeFiles/base_utils.dir/src/file_utils.cpp.o CMakeFiles/base_utils.dir/src/image_utils.cpp.o CMakeFiles/base_utils.dir/src/math_utils.cpp.o CMakeFiles/base_utils.dir/src/filter/kalman_filter.cpp.o CMakeFiles/base_utils.dir/src/filter/mean_filter.cpp.o CMakeFiles/base_utils.dir/src/filter/tracking_flow.cpp.o
+/usr/bin/ranlib libbase_utils.a

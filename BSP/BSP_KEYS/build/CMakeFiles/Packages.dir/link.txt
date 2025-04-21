@@ -1,0 +1,2 @@
+/usr/bin/ar qc libPackages.a CMakeFiles/Packages.dir/Keys.cpp.o
+/usr/bin/ranlib libPackages.a

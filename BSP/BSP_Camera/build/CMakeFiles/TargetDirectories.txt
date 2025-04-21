@@ -1,0 +1,16 @@
+/home/MootBot/MoodBot_Product/BSP/BSP_Camera/build/CMakeFiles/dmcv.dir
+/home/MootBot/MoodBot_Product/BSP/BSP_Camera/build/CMakeFiles/Detector.dir
+/home/MootBot/MoodBot_Product/BSP/BSP_Camera/build/CMakeFiles/edit_cache.dir
+/home/MootBot/MoodBot_Product/BSP/BSP_Camera/build/CMakeFiles/rebuild_cache.dir
+/home/MootBot/MoodBot_Product/BSP/BSP_Camera/build/base_build/CMakeFiles/base_utils.dir
+/home/MootBot/MoodBot_Product/BSP/BSP_Camera/build/base_build/CMakeFiles/edit_cache.dir
+/home/MootBot/MoodBot_Product/BSP/BSP_Camera/build/base_build/CMakeFiles/rebuild_cache.dir
+/home/MootBot/MoodBot_Product/BSP/BSP_Camera/build/TNN_build/CMakeFiles/TNN.dir
+/home/MootBot/MoodBot_Product/BSP/BSP_Camera/build/TNN_build/CMakeFiles/edit_cache.dir
+/home/MootBot/MoodBot_Product/BSP/BSP_Camera/build/TNN_build/CMakeFiles/rebuild_cache.dir
+/home/MootBot/MoodBot_Product/BSP/BSP_Camera/build/TNN_build/source/tnn/device/cpu/CMakeFiles/TNNCpu.dir
+/home/MootBot/MoodBot_Product/BSP/BSP_Camera/build/TNN_build/source/tnn/device/cpu/CMakeFiles/edit_cache.dir
+/home/MootBot/MoodBot_Product/BSP/BSP_Camera/build/TNN_build/source/tnn/device/cpu/CMakeFiles/rebuild_cache.dir
+/home/MootBot/MoodBot_Product/BSP/BSP_Camera/build/TNN_build/source/tnn/device/opencl/CMakeFiles/TNNOpenCL.dir
+/home/MootBot/MoodBot_Product/BSP/BSP_Camera/build/TNN_build/source/tnn/device/opencl/CMakeFiles/edit_cache.dir
+/home/MootBot/MoodBot_Product/BSP/BSP_Camera/build/TNN_build/source/tnn/device/opencl/CMakeFiles/rebuild_cache.dir
