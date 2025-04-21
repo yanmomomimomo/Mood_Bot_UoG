@@ -655,6 +655,314 @@ Servo control signals are PWM signals with a 20ms period (50Hz). The servo angle
 - Software PWM is implemented by controlling GPIO output via the `gpiod` library and `usleep` for microsecond-level timing, emulating hardware PWM.  
 - This method allows Raspberry Pi GPIO to precisely drive MG996R servos, achieving the required rotational control.
 
+### RD-03 Human Presence Detection Sensor
+
+#### File Structure and Function Description
+
+1. **Rd-03.hpp**  
+- Defines macros for RD-03 related GPIO pin numbers, serial communication baud rate, and human detection status constants (`NO_HUM` and `HUM`).  
+- Includes necessary GPIO and system header files.  
+- Declares external variable `chip0` linked to GPIO chip operations.
+
+2. **Rd-03_class.hpp**  
+- Defines the `RD_class` responsible for low-level interaction with the RD-03 sensor.  
+- Member variables include pointers for GPIO operations (`gpiod_chip*` and `gpiod_line*`), serial device offset `offset_`, and sensor configuration parameters such as minimum detection distance `min_dist_cm`, maximum detection distance `max_dist_cm`, and target disappearance delay `delay_s`.  
+- Provides constructors, destructor, and core reading function `GetValue()`.
+
+3. **Rd-03.cpp**  
+- Implements the functionality of `RD_class`.  
+- Opens and initializes serial communication via `open_serial`, configuring baud rate and communication parameters.  
+- Uses `enter_cmd_mode`, `set_param`, and `exit_cmd_mode` to configure sensor parameters (minimum/maximum distance and delay) through a specific protocol.  
+- Uses Linux `gpiod` library to read GPIO input, and through repeated sampling via `GetValue` determines human presence.
+
+4. **Rd-03_register.cpp**  
+- Provides `RDGetter` class that monitors `RD_class` state changes based on event-driven mechanism.  
+- Creates an event file descriptor (`eventfd`) and monitoring thread that continuously reads sensor values and notifies the event bus (`EventBus`).  
+- Implements event blocking wait and thread lifecycle management (start/stop).
+
+---
+
+#### Key Function Descriptions
+
+- **RD_class Constructor `RD_class(uint8_t offset, const std::string &consumer)`**  
+  Initializes the serial connection and enters command mode to configure sensor parameters (min/max distance, delay time).  
+  Initializes GPIO interface and binds corresponding GPIO line number.  
+  Parameter `offset` specifies GPIO offset address; `consumer` is the consumer identifier string.
+
+- **`int RD_class::GetValue()`**  
+  Reads GPIO input line multiple times (5 samples).  
+  If high level is detected more than 3 times, returns human detected (`HUM`), otherwise no human (`NO_HUM`).
+
+- **Serial Communication Helper Functions**  
+  - `open_serial(const char *dev)`: Opens the serial device and configures baud rate and operating mode.  
+  - `enter_cmd_mode(int fd)` and `exit_cmd_mode(int fd)`: Control sensor entry and exit from command mode.  
+  - `set_param(int fd, uint16_t param_id, uint16_t value)`: Writes configuration parameters according to sensor protocol.
+
+- **RDGetter Core Functions (Event Monitoring Related)**  
+  - `startWatcher()`: Starts a background thread continuously reading sensor status and triggers event notification upon state changes.  
+  - `blockAndWaitEvent()`: Blocks and waits for event trigger.
+
+---
+
+#### RD-03 Sensor Basic Principle and Code Implementation
+
+The RD-03 sensor configures internal parameters via serial communication and reads output signals from a GPIO pin. The basic detection logic is:
+
+- When the sensor detects a human presence, the GPIO outputs a high-level signal; otherwise, it outputs low level.  
+- Through serial configuration, the effective detection distance (`min_dist_cm` and `max_dist_cm`) and the target disappearance delay (`delay_s`) can be set.  
+- The code opens serial port and enters command mode, sets these parameters via protocol frames, then exits command mode.  
+- It monitors GPIO pin levels via repeated sampling with debounce filtering to accurately detect presence.  
+- The event monitoring thread uses the `eventfd` mechanism to respond to and notify about state changes, facilitating integration with higher-level business logic.
+
+### DHT11 Environmental Temperature and Humidity Sensor
+
+#### File Structure and Function Description
+
+1. **`DHT11.hpp`**  
+- Defines the GPIO pin for the DHT11 sensor (BCM pin 4, macro `DHT_GPIO`).  
+- Sets communication-related constants: response timeout (`RESPONSE_TIMEOUT_MS`, 7 ms), logic level threshold (`LOGIC_THRESHOLD_US`, 56 µs), and maximum signal edges (`MAX_EDGES`, 82).  
+- Includes GPIO-related header files and required C++ standard libraries.
+
+2. **`DHT11_class.hpp`**  
+- Implements the `DHT11_class` responsible for managing the hardware interface of the DHT11 sensor.  
+- Contains constructor and destructor, with member variables including GPIO chip (`chip_`), GPIO line (`line_`), GPIO offset, and consumer identifier.  
+- Core interface is `MT_check()`, which reads temperature and humidity data.
+
+3. **`DHT11.cpp`**  
+- Implements `DHT11_class` core functionality.  
+- `MT_check()` communicates with the DHT11 sensor by:  
+  - Sending a start signal to activate the sensor.  
+  - Listening to GPIO line signal edges, recording timestamps and interpreting bit values based on timing intervals.  
+  - Parsing the sequence to extract integer and decimal parts of humidity and temperature.  
+  - Encoding temperature and humidity values as an integer using `pack5DigitsFromFloat`.  
+- Provides microsecond and millisecond delay functions (`delay_us`, `delay_ms`) to meet communication timing requirements.
+
+4. **`DHT11_register.cpp`**  
+- Implements `DHTGetter` class for periodic reading and publishing of sensor data to an event bus.  
+- Binds event bus via callback mechanism for real-time data publishing.  
+- Maintains a background sampling thread that calls `MT_check()` every 2 seconds and writes data to an event file descriptor (`eventfd`).  
+- Provides blocking wait on events (`blockAndWaitEvent()`) and safe thread stopping (`stopWatcher()`).
+
+---
+
+#### Key Function Descriptions
+
+- **`DHT11_class::MT_check()`**  
+  Sends a wake-up signal (pulls GPIO low for 20 ms then high for 30 µs) to start the sensor.  
+  Requests GPIO to capture both edges, monitoring up to 82 signal edges during data transmission.  
+  Parses timing intervals to distinguish 0/1 bits using the threshold.  
+  Extracts humidity and temperature integer and fractional parts, encoding them into a single integer.  
+  Returns -1 if any error occurs.
+
+- **`DHTGetter::startWatcher()`**  
+  Starts a dedicated thread that calls `MT_check()` every 2 seconds, writing valid readings to eventfd to notify other modules.
+
+- **`DHTGetter::blockAndWaitEvent()`**  
+  Blocks reading the eventfd, waiting for new data to ensure synchronized communication.
+
+---
+
+#### DHT11 Sensor Basic Principle and Code Implementation
+
+The DHT11 sensor uses a single-wire digital communication protocol to transmit temperature and humidity data through timing sequences on a single GPIO line:
+
+- The host (Raspberry Pi) initiates by pulling the GPIO line low for at least 18 ms to activate the sensor.  
+- The sensor responds with a start signal, then sends 40 bits of data: 8 bits humidity integer, 8 bits humidity decimal, 8 bits temperature integer, 8 bits temperature decimal, and a checksum.  
+- Each bit is determined by measuring the length of the high-level pulse (approximately 26-28 µs for "0" and about 70 µs for "1").  
+- The code uses the `gpiod` library to monitor GPIO edge events, precisely recording timestamps of rising and falling edges and calculating timing differences to decode the binary data.  
+- Temperature and humidity data are compiled and encoded into an integer for further transmission and handling.  
+- The solution combines event-driven design and multithreading for stable and efficient environmental temperature and humidity acquisition.
+### DHT11 Environmental Temperature and Humidity Sensor & 5516 Light Intensity Detection Module
+
+#### File Structure and Function Description
+
+1. **`5516.hpp`**  
+- Defines the GPIO pin number connected to the 5516 sensor (BCM 17) and the consumer identifier `"light-sensor"`.  
+- Defines sensor status constants: `LIGHT` (light detected, value 0) and `NO_LIGHT` (no light detected, value 1).  
+- Includes the GPIO operation library header `gpiod`.  
+- Declares external variable `chip0` for unified GPIO chip access.
+
+2. **`5516_class.hpp`**  
+- Defines the `S5516_class` encapsulating hardware operations for the sensor.  
+- Constructor `S5516_class(uint8_t offset, const std::string &consumer)` initializes the GPIO line.  
+- Provides `GetValue()` to obtain the current light detection status.
+
+3. **`5516.cpp`**  
+- Implements constructor, destructor, and core methods of `S5516_class`.  
+- Constructor acquires GPIO line via `gpiod_chip_get_line` and requests input mode.  
+- `GetValue()` samples the GPIO input 5 times, counts high level instances. If high level ≥3 times, returns `NO_LIGHT` (no light); else returns `LIGHT`. Implements simple debounce filtering.  
+- Destructor releases resources.
+
+4. **`5516_register.cpp`**  
+- Implements `S5516Getter` class for event-driven sensor state monitoring and notification.  
+- Uses Linux event file descriptor (`eventfd`) for blocking listening and event triggers.  
+- `startWatcher()` launches a background thread that continuously reads the sensor state and notifies event bus on abnormal conditions.  
+- `blockAndWaitEvent()` blocks until event signals occur, mainly detecting no-light events.  
+- `stopWatcher()` stops the thread and safely exits monitoring.
+
+---
+
+#### Key Function Descriptions
+
+- **`S5516_class::S5516_class(uint8_t offset, const std::string &consumer)`**  
+  Initializes the GPIO chip and the specified GPIO line offset as input.  
+  Parameters: `offset` for GPIO line offset number; `consumer` as the user identifier.
+
+- **`int S5516_class::GetValue()`**  
+  Reads the GPIO line state 5 times.  
+  Counts the number of high levels detected; high level represents "no light".  
+  If 3 or more times are high, returns `NO_LIGHT`; otherwise returns `LIGHT`.  
+  Multiple sampling reduces noise and debounce effects.
+
+- **`S5516Getter` class related functions**  
+  Constructor creates `eventfd` and registers callback to notify the event bus.  
+  `startWatcher()` runs a thread repeatedly calling `GetValue()`, writing to eventfd on detecting abnormal states.  
+  `blockAndWaitEvent()` blocks waiting on eventfd signal, returns upon no-light event.  
+  `stopWatcher()` safely stops the monitoring thread.
+
+---
+
+#### 5516 Light Sensor Basic Principle and Code Implementation
+
+The 5516 light sensor outputs digital signal (DO pin) indicating light detection status via GPIO:
+
+- When light is detected, the DO pin outputs low level (0), indicating light presence.  
+- When no light is detected, the DO pin outputs high level (1), indicating no light.  
+- The code uses the `gpiod` library to access GPIO pin BCM 17 configured as input to read this digital signal.  
+- `GetValue()` samples the GPIO input 5 times, counts the number of high levels, if ≥3 judged as "no light", otherwise "light".  
+- This simple multiple sampling method effectively filters noise and signal jitter, reducing false detection.  
+- Using event listening modules allows timely response to changes in light intensity state.
+### QM2 Smoke Detection Module
+
+#### File Structure and Function Description
+
+1. **`QM2.hpp`**  
+- Defines parameters related to the QM2 smoke sensor:  
+  - Connected GPIO pin number (`GPIO_QM2`, BCM pin 21).  
+  - Device consumer identifier (`QM2_CONSUMER`).  
+  - Sampling count (`SAMPLE_COUNT`), sampling interval (`SAMPLE_INTERVAL_MS`), and threshold for high-level count to judge alarm (`THRESHOLD_COUNT`).  
+  - Smoke detection status codes: normal state `SMOKE_NOR` and smoke alarm `SMOKE_ERR`.
+
+2. **`QM2_class.hpp`**  
+- Defines the `QM2_class` that encapsulates GPIO resource management and smoke detection logic.  
+- Constructor takes GPIO offset and consumer name to initialize the GPIO chip and line.  
+- Contains `Smoke_check()` function for smoke status detection and `getState()` to get current GPIO line state.  
+- Private members include GPIO chip pointer, GPIO line pointer, sampling parameters, and thresholds.
+
+3. **`QM2.cpp`**  
+- Implements `QM2_class`:  
+  - Constructor opens and binds to `gpiochip0`, requests the specified GPIO line as input.  
+  - `Smoke_check()` reads GPIO multiple times, counts high-level occurrences.  
+  - If high-level count is below threshold, smoke concentration is considered abnormal, returning `SMOKE_ERR`; otherwise returns `SMOKE_NOR`.  
+  - Destructor releases GPIO resources.
+
+4. **`QM2_register.cpp`**  
+- Implements `QM2Getter` class for event-based smoke monitoring and notification.  
+- Constructor creates event file descriptor (`eventfd`) for blocking wait and registers callback to publish messages to the event bus (`EventBus`).  
+- `startWatcher()` runs in a separate thread, continuously calling `Smoke_check()`, writes to eventfd on abnormal smoke detection to trigger notification.  
+- `blockAndWaitEvent()` blocks reading eventfd to synchronously wait for smoke events.  
+- `stopWatcher()` stops the monitoring thread and safely exits.
+
+---
+
+#### Key Function Descriptions
+
+- **QM2_class Constructor**  
+  `QM2_class(uint8_t offset, const std::string &consumer_key)`  
+  Opens GPIO chip, gets GPIO line with specified offset, and requests input mode.  
+  Initializes the smoke detection line.
+
+- **`int QM2_class::Smoke_check()`**  
+  Performs multiple (`SAMPLE_COUNT`) GPIO readings, each spaced by `SAMPLE_INTERVAL_MS` milliseconds.  
+  Counts the number of high-level reads.  
+  If high-level count is less than or equal to threshold `THRESHOLD_COUNT`, returns smoke alarm `SMOKE_ERR`.  
+  Otherwise returns normal status `SMOKE_NOR`.  
+  Implements smoke concentration detection via GPIO level sampling.
+
+- **QM2Getter’s `startWatcher()` and `blockAndWaitEvent()`**  
+  Monitors smoke status in a thread loop by calling `Smoke_check()`.  
+  On detecting smoke alarm, writes to eventfd to trigger notification.  
+  Blocks waiting for event occurrence enabling event-driven upper-level logic.
+
+---
+
+#### QM2 Smoke Sensor Basic Principle and Code Implementation
+
+The QM2 smoke sensor provides digital output (DO) reflecting smoke concentration:
+
+- The sensor's digital output DO connects to Raspberry Pi’s GPIO pin.  
+- When smoke concentration exceeds threshold, DO outputs low level (logic 0); otherwise high level (logic 1).  
+- The code uses `gpiod` library to access GPIO input line state and performs multiple fast samplings counting high-level instances.  
+- When sampled high-level counts fall below the set threshold, smoke alarm is indicated.  
+- The event monitoring module enables real-time detection and response to smoke alarm states, facilitating integration with higher-level systems for smoke alert handling.
+
+### USB Speaker
+
+#### File Structure and Function Description
+
+1. **`Audio.hpp`**  
+- Includes headers for SDL2 and SDL_mixer libraries required for audio playback.  
+- Defines preset music file paths categorized by mood (tired, happy, sad).  
+- Includes standard IO, threading, atomic operations, and signal handling libraries to support multi-threaded audio playback and event management.
+
+2. **`Audio_class.hpp`**  
+- Defines `Audio_class` as the core interface for sound playback functionality.  
+- Members include private `Mix_Music* music_` pointer to manage audio stream and current volume `volume_`.  
+- Public interface includes constructor (initializes volume and audio system), destructor (frees resources), `AudioPlay` (plays specified audio file), `AudioStop` (stops playback), and `SetVol` (sets playback volume).
+
+3. **`Audio.cpp`**  
+- Implements `Audio_class`.  
+- Constructor initializes SDL audio subsystem and SDL_mixer library, configuring sample rate and audio format, setting initial volume, with error handling.  
+- `AudioPlay` loads the specified music file and plays it once.  
+- `AudioStop` stops any currently playing audio immediately.  
+- `SetVol` adjusts playback volume.  
+- Destructor cleans up audio resources and closes audio system.
+
+4. **`Audio_register.cpp`**  
+- Contains `AudioSetter` class responsible for event listening and command response for audio playback control.  
+- Uses `timerfd` for periodic event triggering and `eventfd` for event notifications.  
+- `blockAndWaitEvent()` blocks waiting on timer or event file descriptors using `poll`.  
+- `toggle(int cmd)` plays the audio associated with the given command or mutes.  
+- Provides state retrieval and event notification interfaces.
+
+---
+
+#### Key Function Descriptions
+
+- **`Audio_class::Audio_class(uint8_t volume)`**  
+  Initializes SDL audio modules and SDL_mixer library.  
+  Configures audio playback format: 44100 Hz sample rate, stereo, 2048 byte buffer.  
+  Sets initial volume as passed, prints error on failure.
+
+- **`void Audio_class::AudioPlay(std::string Music)`**  
+  Loads music file from given path.  
+  If successful, plays the music once via SDL_mixer.  
+  Prints error messages if loading fails.
+
+- **`void Audio_class::AudioStop()`**  
+  Immediately stops any currently playing music.
+
+- **`void Audio_class::SetVol(uint8_t Vol)`**  
+  Adjusts the playback volume dynamically.
+
+- **`AudioSetter::blockAndWaitEvent()`**  
+  Blocks waiting on timer and event file descriptors.  
+  Returns current command to process or timer interrupts after event occurrence.
+
+- **`AudioSetter::toggle(int cmd)`**  
+  Plays the corresponding audio file based on the command (happy, sad, tired, etc.).  
+  Command 0 means mute and sets volume to 0.
+
+---
+
+#### USB Speaker Basic Principle and Code Implementation
+
+The USB speaker connects to the Raspberry Pi via USB and serves as the system's default audio output device. The Raspberry Pi routes digital audio data to the USB speaker through the OS audio subsystem (e.g., ALSA). This project uses SDL2 and SDL_mixer for audio playback abstraction:
+
+- SDL initializes the audio subsystem; SDL_mixer handles decoding and playback of multiple audio formats.  
+- Audio files are loaded into memory with SDL_mixer, then playback calls output audio via the system sound card (the USB speaker).  
+- Supports dynamic volume adjustment and stopping playback.  
+- Event-driven and timer-based control logic enables flexible and intelligent audio playback management.
 
 ## Code Structure
 ## How it works
